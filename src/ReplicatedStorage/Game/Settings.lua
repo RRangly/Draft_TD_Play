@@ -1,0 +1,3 @@
+local Settings = {}
+
+return Settings

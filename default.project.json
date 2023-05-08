@@ -1,0 +1,55 @@
+{
+  "name": "Draft_TD_Play",
+  "tree": {
+    "$className": "DataModel",
+
+    "ReplicatedStorage": {
+      "ServerCommunication": {
+        "$className": "RemoteEvent"
+      },
+      "ClientEvents": {
+        "$className": "Folder",
+        "DraftBegin": {
+          "$className": "BindableEvent"
+        },
+        "TowerUpdate": {
+          "$className": "BindableEvent"
+        },
+        "MobUpdate": {
+          "$className": "BindableEvent"
+        }
+      },
+      "Towers": {
+        "$path": "src/ReplicatedStorage/Towers"
+      },
+      "Mobs": {
+        "$path": "src/ReplicatedStorage/Mobs"
+      },
+      "Maps": {
+        "$path": "src/ReplicatedStorage/Maps"
+      },
+      "Game": {
+        "$path": "src/ReplicatedStorage/Game"
+      }
+    },
+    "ServerScriptService": {
+      "$path": "src/ServerScriptService"
+    },
+    "ServerStorage": {
+      "ServerEvents": {
+        "$className": "Folder",
+        "GameEnded": {
+          "$className": "BindableEvent"
+        },
+        "DraftSelect": {
+          "$className": "BindableEvent"
+        }
+      }
+    },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "$path": "src/StarterPlayer/StarterPlayerScripts"
+      }
+    }
+  }
+}
