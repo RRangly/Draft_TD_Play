@@ -43,6 +43,9 @@
         },
         "DraftSelect": {
           "$className": "BindableEvent"
+        },
+        "DraftEnd": {
+          "$className": "BindableEvent"
         }
       }
     },

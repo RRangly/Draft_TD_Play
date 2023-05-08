@@ -11,6 +11,7 @@ RemoteEvent.OnClientEvent:Connect(function(eventName, ...)
     local event = ClientEvents:FindFirstChild(eventName)
     if not event then
         print("Event non-existent!")
+    else
         event:Fire(...)
     end
 end)

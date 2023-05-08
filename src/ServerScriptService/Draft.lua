@@ -5,7 +5,8 @@ local Towers = ReplicatedStorage.Towers
 local Mobs = ReplicatedStorage.Mobs
 
 local RemoteEvent = ReplicatedStorage.ServerCommunication
-local DraftSelect = ServerStorage.ServerEvents.DraftSelect 
+local DraftSelect = ServerStorage.ServerEvents.DraftSelect
+local DraftEnd = ServerStorage.ServerEvents.DraftEnd
 local Draft = {}
 
 local function opposite(input)
@@ -32,10 +33,9 @@ function Draft.startDraft(player1, player2)
     -- Choose 16 random tower cards from the shuffled table
     local numCards = 4
     local playerCards = {
-        {{},{},{},{}},
-        {{},{},{},{}}
+        {{}},
+        {{}},
     }
-
     for i = 1, numCards do
         if i <= numCards / 2 then
             table.insert(playerCards[1][math.ceil(i / 2)], towerCards[i])
@@ -53,22 +53,26 @@ function Draft.startDraft(player1, player2)
         end
         local playerNum
         if player == player1 then
-            if currentSet[playerNum] >= 4 then
-                return
-            end
             playerNum = 1
-        elseif player == player2 then
-            if currentSet[playerNum] >= 4 then
+            if currentSet[playerNum] > (numCards / 4) then
                 return
             end
+        elseif player == player2 then
             playerNum = 2
+            if currentSet[playerNum] > (numCards / 4) then
+                return
+            end
         end
         table.insert(playerPickedCards[playerNum], playerCards[playerNum][currentSet[playerNum]][pickNum])
         table.insert(playerPickedCards[opposite(playerNum)], playerCards[playerNum][currentSet[playerNum]][opposite(pickNum)])
+        print("Draftselect", currentSet[1], currentSet[2])
         currentSet[playerNum] += 1
-        if currentSet[1] >= 4 and currentSet[2] >= 4 then
+        if currentSet[1] > (numCards / 4) and currentSet[2] > (numCards / 4) then
+            print("DraftEnded")
             RemoteEvent:FireClient(player1, "TowerSelection", playerPickedCards[1])
             RemoteEvent:FireClient(player2, "TowerSelection", playerPickedCards[2])
+            DraftEnd:Fire()
+            return
         end
     end)
 end
