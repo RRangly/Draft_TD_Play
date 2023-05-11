@@ -72,7 +72,10 @@ function Draft.startDraft(player1, player2)
             RemoteEvent:FireClient(player1, "TowerSelection", playerPickedCards[1])
             RemoteEvent:FireClient(player2, "TowerSelection", playerPickedCards[2])
             DraftEnd:Fire()
-            return
+            return {
+                playerPickedCards[1],
+                playerPickedCards[2]
+            }
         end
     end)
 end

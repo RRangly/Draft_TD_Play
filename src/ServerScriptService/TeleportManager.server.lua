@@ -16,10 +16,13 @@ Players.PlayerAdded:Connect(function(player)
     repeat
         wait()
     until player:HasAppearanceLoaded()
+    Game.singleTest(player)
+    --[[
     table.insert(PlayingPlayers, player)
     if #PlayingPlayers >= 2 then
         Game.start(PlayingPlayers[1], PlayingPlayers[2])
     end
+    ]]
 end)
 
 Players.PlayerRemoving:Connect(function(player)

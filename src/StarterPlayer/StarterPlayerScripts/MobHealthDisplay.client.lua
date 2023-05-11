@@ -35,7 +35,7 @@ local function displayHealthBar(humanoid)
         health = humanoid.Health
         for _, gui in pairs(guis) do
             if gui:FindFirstChild("HealthBar") then
-                gui.HealthBar.Bar:TweenSize(UDim2.new(health / maxHealth, 0, 1, 0))
+                gui.HealthBar.Bar.Size = UDim2.new(health / maxHealth, 0, 1, 0)
             end
             if gui:FindFirstChild("HumanoidHealthText") then
                 gui.HumanoidHealthText.Text = health .. " / " .. maxHealth

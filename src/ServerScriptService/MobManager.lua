@@ -11,17 +11,11 @@ local Maps = ReplicatedStorage.Maps
 local MobFolder = Workspace.Mobs
 
 local MobManager = {
-    Mobs = {}
+    CurrentWave = 0;
+    Mobs = {};
+    PreSpawn = {};
 }
 MobManager.__index = MobManager
-
-function MobManager:TakeDamage(damage, mobIndex)
-    local humanoid = self.Object.Humanoid
-    humanoid:TakeDamage(damage)
-    if humanoid.Health <= 0 then
-        table.remove(MobManager.Mobs, mobIndex)
-    end
-end
 
 function MobManager.Spawn(mobName)
     local mobInfo = require(Mobs:FindFirstChild(mobName))
@@ -61,12 +55,55 @@ function MobManager.Spawn(mobName)
     table.insert(MobManager.Mobs, mobData)
 end
 
+function MobManager.startWave()
+    MobManager.CurrentWave += 1
+    print("Starting Wave ".. MobManager.CurrentWave)
+    for _ = 1, MobManager.CurrentWave * 3, 1 do
+        table.insert(MobManager.PreSpawn, "Zombie")
+    end
+    coroutine.wrap(
+        function()
+            for i = #MobManager.PreSpawn, 1, -1 do
+                local mobName = MobManager.PreSpawn[i]
+                MobManager.Spawn(mobName)
+                table.remove(MobManager.PreSpawn, i)
+                task.wait(0.25)
+            end
+        end
+    )()
+end
+
+function MobManager.killHumanoid(mobIndex)
+    table.remove(MobManager.Mobs, mobIndex)
+    if #MobManager.Mobs < 1 and #MobManager.PreSpawn < 1 then
+        MobManager.startWave()
+    end
+end
+
+function MobManager:TakeDamage(damage, mobIndex)
+    local humanoid = self.Object.Humanoid
+    humanoid:TakeDamage(damage)
+    if humanoid.Health <= 0 then
+        self.Object:Destroy()
+        table.remove(MobManager.Mobs, mobIndex)
+        if #MobManager.Mobs < 1 and #MobManager.PreSpawn < 1 then
+            MobManager.startWave()
+        end
+        --MobManager.killHumanoid(mobIndex)
+    end
+end
+
+function MobManager.startGame()
+    MobManager.CurrentWave = 0
+    MobManager.startWave()
+end
+
 local updateTime = 0
+
 RunService.Heartbeat:Connect(function(deltaTime)
     updateTime += deltaTime
-    if updateTime >= 0.15 then
+    if updateTime >= 0.1 then
         RemoteEvent:FireAllClients("MobUpdate",MobManager.Mobs)
     end
 end)
-
 return MobManager
