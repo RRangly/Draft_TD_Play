@@ -12,7 +12,7 @@
         "DraftBegin": {
           "$className": "BindableEvent"
         },
-        "TowerUpdate": {
+        "TowerSelection": {
           "$className": "BindableEvent"
         },
         "MobUpdate": {

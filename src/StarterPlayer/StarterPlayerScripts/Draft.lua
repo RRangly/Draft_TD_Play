@@ -23,6 +23,7 @@ local function updateDraftGui(frames, cards)
 end
 
 function Draft.draftBegin(draftCards)
+    print("DraftCards", draftCards)
     local draftGui = PlayerGuis.DraftGui:Clone()
     draftGui.Parent = PlayerGui
     local currentPick = 1

@@ -5,7 +5,7 @@ local RemoteEvent = ReplicatedStorage.ServerCommunication
 local ClientEvents = ReplicatedStorage.ClientEvents
 
 local DraftBegin = ClientEvents.DraftBegin
-local TowerUpdate = ClientEvents.TowerUpdate
+--local TowerUpdate = ClientEvents.TowerUpdate
 
 RemoteEvent.OnClientEvent:Connect(function(eventName, ...)
     local event = ClientEvents:FindFirstChild(eventName)

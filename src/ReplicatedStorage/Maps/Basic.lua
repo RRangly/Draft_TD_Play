@@ -1,4 +1,3 @@
-local PhysicsService = game:GetService("PhysicsService")
 local Map = {
     WayPoints = {
         Vector3.new(0, 5, 2.5),
