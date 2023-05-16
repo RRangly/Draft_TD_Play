@@ -63,7 +63,7 @@ function TowerManager:towerUpdate(towerIndex, mobs, deltaTime)
 end
 
 function TowerManager:place(towerName, position)
-    local tower = require(Towers:FindFirstChild(towerName))
+    --local tower = require(Towers:FindFirstChild(towerName))
     local clone = TowerModels:FindFirstChild(towerName):Clone()
     clone.Parent = WorkSpaceTower
     clone:MoveTo(Vector3.new(position.X, 5, position.Z))

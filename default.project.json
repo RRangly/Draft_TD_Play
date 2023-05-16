@@ -12,7 +12,7 @@
         "DraftBegin": {
           "$className": "BindableEvent"
         },
-        "TowerSelection": {
+        "TowerUpdate": {
           "$className": "BindableEvent"
         },
         "MobUpdate": {
@@ -38,7 +38,7 @@
     "ServerStorage": {
       "ServerEvents": {
         "$className": "Folder",
-        "GameEnded": {
+        "PlaceTower": {
           "$className": "BindableEvent"
         },
         "DraftSelect": {

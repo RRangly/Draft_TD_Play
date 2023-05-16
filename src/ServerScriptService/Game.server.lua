@@ -33,7 +33,7 @@ function Game.start(players)
     for i = 1, 2, 1 do
         PlayerDatas[i].Player = players[i]
         PlayerDatas[i].Towers = TowerManager.new(draft[i])
-        RemoteEvent:FireClient(players[i], "TowerSelection", PlayerDatas[i].Towers)
+        RemoteEvent:FireClient(players[i], "TowerUpdate", PlayerDatas[i].Towers)
     end
     task.wait(2)
     for i = 1, 2, 1 do
@@ -63,7 +63,7 @@ function Game.singleTest(player)
     Draft.singleDraft(player)
     local draft = DraftEnd.Event:Wait()
     PlayerDatas[1].Towers = TowerManager.new(draft)
-    RemoteEvent:FireClient(player, "TowerSelection", PlayerDatas[1].Towers.Cards)
+    RemoteEvent:FireClient(player, "TowerUpdate", PlayerDatas[1].Towers.Cards)
     task.wait(1)
     PlayerDatas[1].Map = MapManager.load("Basic", Vector3.new(0, 0, 100))
     task.wait(1)

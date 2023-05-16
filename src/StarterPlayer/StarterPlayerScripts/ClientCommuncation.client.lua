@@ -1,10 +1,8 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Draft = require(script.Parent:WaitForChild("Draft"))
 local RemoteEvent = ReplicatedStorage.ServerCommunication
 local ClientEvents = ReplicatedStorage.ClientEvents
 
-local DraftBegin = ClientEvents.DraftBegin
 --local TowerUpdate = ClientEvents.TowerUpdate
 
 RemoteEvent.OnClientEvent:Connect(function(eventName, ...)
@@ -14,8 +12,4 @@ RemoteEvent.OnClientEvent:Connect(function(eventName, ...)
     else
         event:Fire(...)
     end
-end)
-
-DraftBegin.Event:Connect(function(cards)
-    Draft.draftBegin(cards)
 end)
