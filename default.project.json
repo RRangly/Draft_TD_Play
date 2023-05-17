@@ -12,10 +12,16 @@
         "DraftBegin": {
           "$className": "BindableEvent"
         },
+        "CardsUpdate": {
+          "$className": "BindableEvent"
+        },
         "TowerUpdate": {
           "$className": "BindableEvent"
         },
         "MobUpdate": {
+          "$className": "BindableEvent"
+        },
+        "GameStarted": {
           "$className": "BindableEvent"
         }
       },

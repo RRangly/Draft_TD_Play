@@ -12,7 +12,7 @@ function MobManager:Spawn(mobName)
     local mobInfo = require(Mobs:FindFirstChild(mobName))
     local model = MobModels:FindFirstChild(mobName)
 
-    local wayPoints = self.Map.WayPoints
+    local wayPoints = self.WayPoints
     local clone = model:Clone()
     local humanoid = clone.Humanoid
     
@@ -29,15 +29,6 @@ function MobManager:Spawn(mobName)
         end
     end
 
-    coroutine.wrap(function()
-        for i = 2, #wayPoints, 1 do
-            if not humanoid then
-                return
-            end
-            humanoid:MoveTo(wayPoints[i])
-            humanoid.MoveToFinished:Wait()
-        end
-    end)()
     local mobData = {
         Object = clone;
         MobName = mobName;
@@ -46,7 +37,7 @@ function MobManager:Spawn(mobName)
     }
     setmetatable(mobData, MobManager)
     table.insert(self.Mobs, mobData)
-end
+end 
 
 function MobManager:startWave()
     self.CurrentWave += 1
@@ -79,12 +70,45 @@ function MobManager:TakeDamage(mobIndex, damage)
     end
 end
 
-function MobManager.startGame(map)
+function MobManager:startMovement(mobIndex, wayPoints)
+    local mob = self.Mobs[mobIndex]
+    local moveConnection
+    local humanoid = mob.Object.Humanoid
+    local i = 2
+    local healthReduction = nil
+    table.insert(self.CurrentMoving, humanoid)
+    humanoid:MoveTo(wayPoints[i])
+    moveConnection = humanoid.MoveToFinished:Connect(function()
+        i += 1
+        if wayPoints[i] then
+            humanoid:MoveTo(wayPoints[i])
+        else
+            mob.Object:Destroy()
+            healthReduction = 1
+        end
+    end)
+
+    humanoid.Died:Once(function()
+        moveConnection:Disconnect()
+        for index, hum in pairs(self.CurrentMoving) do
+            if humanoid == hum then
+                table.remove(self.CurrentMoving, index)
+            end
+        end
+        healthReduction = 0
+    end)
+    repeat
+        task.wait()
+    until healthReduction
+    return healthReduction
+end
+
+function MobManager.startGame()
     local mobs = {
         CurrentWave = 0;
-        Map = map;
         Mobs = {};
         PreSpawn = {};
+        CurrentMoving = {};
     }
     setmetatable(mobs, MobManager)
     return mobs
