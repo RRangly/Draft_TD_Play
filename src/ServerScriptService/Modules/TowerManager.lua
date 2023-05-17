@@ -1,5 +1,4 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
 local TowerModels = ReplicatedStorage.TowerModels
@@ -46,6 +45,30 @@ function TowerManager:findClosestMob(towerIndex, mobs)
     end
 
     return closestMob
+end
+
+function TowerManager:findLowestHealth(towerIndex, mobs)
+    local tower = self.Towers[towerIndex]
+    local towerInfo = require(Towers:FindFirstChild(tower.Name))
+    local range = towerInfo.Stats.AttackRange
+    local towerPart = tower.Model.PrimaryPart
+    local towerVector = Vector3.new(towerPart.Position.X, 0, towerPart.Position.Z)
+
+    local lowestHealthMob = nil
+    local lowestHealth = math.huge
+    for i, mob in pairs(mobs) do
+        local mobPart = mob.Object.PrimaryPart
+        local mobVector = Vector3.new(mobPart.Position.X, 0, mobPart.Position.Z)
+        local humanoid = mob.Object.Humanoid
+
+        local mobHealth = humanoid.Health
+        local mobDistance = (mobVector - towerVector).Magnitude
+        if mobDistance < range and mobHealth < lowestHealth then
+            lowestHealthMob = i
+        end
+    end
+
+    return lowestHealthMob
 end
 
 function TowerManager:towerUpdate(towerIndex, mobs, deltaTime)
