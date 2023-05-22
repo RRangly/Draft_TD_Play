@@ -12,16 +12,14 @@ function MobManager:Spawn(mobName)
     local mobInfo = require(Mobs:FindFirstChild(mobName))
     local model = MobModels:FindFirstChild(mobName)
 
-    local wayPoints = self.WayPoints
     local clone = model:Clone()
     local humanoid = clone.Humanoid
-    
+
     humanoid.WalkSpeed = mobInfo.Stats.WalkSpeed
     humanoid.MaxHealth = mobInfo.Stats.MaxHealth
     humanoid.Health = mobInfo.Stats.MaxHealth
 
     clone.Parent = MobFolder
-    clone:MoveTo(wayPoints[1])
     for _, part in pairs(clone:GetDescendants()) do
         if part:IsA("BasePart") then
             part.CollisionGroup = "GameAssets"
@@ -37,14 +35,17 @@ function MobManager:Spawn(mobName)
     }
     setmetatable(mobData, MobManager)
     table.insert(self.Mobs, mobData)
-end 
+end
 
 function MobManager:startWave()
     self.CurrentWave += 1
+    self.Starting = true
+    task.wait(5)
     print("Starting Wave ".. self.CurrentWave)
     for _ = 1, self.CurrentWave * 3, 1 do
         table.insert(self.PreSpawn, "Zombie")
     end
+    self.Starting = false
     coroutine.wrap(
         function()
             for _ = 1, #self.PreSpawn, 1 do
@@ -63,10 +64,6 @@ function MobManager:TakeDamage(mobIndex, damage)
     humanoid:TakeDamage(damage)
     if humanoid.Health <= 0 then
         mob.Object:Destroy()
-        table.remove(self.Mobs, mobIndex)
-        if #self.Mobs < 1 and #self.PreSpawn < 1 then
-            self:startWave()
-        end
     end
 end
 
@@ -77,18 +74,19 @@ function MobManager:startMovement(mobIndex, wayPoints)
     local i = 2
     local healthReduction = nil
     table.insert(self.CurrentMoving, humanoid)
+    mob.Object:MoveTo(wayPoints[1])
     humanoid:MoveTo(wayPoints[i])
     moveConnection = humanoid.MoveToFinished:Connect(function()
         i += 1
         if wayPoints[i] then
             humanoid:MoveTo(wayPoints[i])
         else
-            mob.Object:Destroy()
+            table.remove(self.Mobs, mobIndex)
             healthReduction = 1
         end
     end)
 
-    humanoid.Died:Once(function()
+    local deathConnection = humanoid.Died:Once(function()
         moveConnection:Disconnect()
         for index, hum in pairs(self.CurrentMoving) do
             if humanoid == hum then
@@ -100,6 +98,8 @@ function MobManager:startMovement(mobIndex, wayPoints)
     repeat
         task.wait()
     until healthReduction
+    mob.Object:Destroy()
+    deathConnection:Disconnect()
     return healthReduction
 end
 
@@ -109,6 +109,7 @@ function MobManager.startGame()
         Mobs = {};
         PreSpawn = {};
         CurrentMoving = {};
+        Starting = true
     }
     setmetatable(mobs, MobManager)
     return mobs

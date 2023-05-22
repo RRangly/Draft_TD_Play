@@ -16,6 +16,9 @@ function TowerManager:attackAvailable(towerIndex, mobs)
 
     for _, mob in pairs(mobs) do
         local mobPart = mob.Object.PrimaryPart
+        if not mobPart then
+            continue
+        end
         local mobVector = Vector3.new(mobPart.Position.X, 0, mobPart.Position.Z)
         local mobDistance = (mobVector - towerVector).Magnitude
         if mobDistance < towerInfo.Stats.AttackRange then
@@ -36,6 +39,7 @@ function TowerManager:findClosestMob(towerIndex, mobs)
     local closestDistance = towerInfo.Stats.AttackRange
     for i, mob in pairs(mobs) do
         local mobPart = mob.Object.PrimaryPart
+        if not mobPart then continue end
         local mobVector = Vector3.new(mobPart.Position.X, 0, mobPart.Position.Z)
         local mobDistance = (mobVector - towerVector).Magnitude
         if mobDistance < closestDistance then
@@ -58,6 +62,7 @@ function TowerManager:findLowestHealth(towerIndex, mobs)
     local lowestHealth = math.huge
     for i, mob in pairs(mobs) do
         local mobPart = mob.Object.PrimaryPart
+        if not mobPart then continue end
         local mobVector = Vector3.new(mobPart.Position.X, 0, mobPart.Position.Z)
         local humanoid = mob.Object.Humanoid
 
@@ -75,6 +80,9 @@ function TowerManager:towerUpdate(towerIndex, mobs, deltaTime)
     local tower = self.Towers[towerIndex]
     local towerInfo = require(Towers:FindFirstChild(tower.Name))
     if self:attackAvailable(towerIndex, mobs.Mobs) then
+        local model = tower.Model
+        local mobPart = mobs.Mobs[self:findClosestMob(towerIndex, mobs.Mobs)].Object.PrimaryPart
+        model:PivotTo(CFrame.new(model:GetPivot().Position, Vector3.new(mobPart.Position.X, model:GetPivot().Position.Y, mobPart.Position.Z)))
         tower.AttackCD += deltaTime
         if tower.AttackCD >= towerInfo.Stats.AttackSpeed then
             tower.AttackCD = 0
@@ -85,22 +93,39 @@ function TowerManager:towerUpdate(towerIndex, mobs, deltaTime)
     end
 end
 
-function TowerManager:place(towerName, position)
-    --local tower = require(Towers:FindFirstChild(towerName))
-    local clone = TowerModels:FindFirstChild(towerName):Clone()
-    clone.Parent = WorkSpaceTower
-    clone:MoveTo(Vector3.new(position.X, 5, position.Z))
-    for _, part in pairs(clone:GetDescendants()) do
-        if part:IsA("BasePart") then
-            part.Anchored = true
-            part.CollisionGroup = "GameAssets"
+function TowerManager:checkPlacementAvailable(towerPosition)
+    local rayCastParam = RaycastParams.new()
+    rayCastParam.CollisionGroup = "Towers"
+    local ray = Workspace:Raycast(Vector3.new(towerPosition.X, towerPosition.Y + 1, towerPosition.Z), Vector3.new(towerPosition.X, towerPosition.Y - 10, towerPosition.Z), rayCastParam)
+    local mapType
+    if ray then
+        mapType = ray.Instance:GetAttribute("MapType")
+        print("MapType", mapType)
+        if mapType == "Cliff" or mapType == "Plain" then
+            return mapType
         end
     end
-    table.insert(self.Towers, {
-        Name = towerName;
-        Model = clone;
-        AttackCD = 0;
-    })
+    return false
+end
+
+function TowerManager:place(towerName, position)
+    --local tower = require(Towers:FindFirstChild(towerName))
+    if TowerManager:checkPlacementAvailable(position) then
+        local clone = TowerModels:FindFirstChild(towerName):Clone()
+        clone.Parent = WorkSpaceTower
+        clone:MoveTo(Vector3.new(position.X, 5, position.Z))
+        for _, part in pairs(clone:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.Anchored = true
+                part.CollisionGroup = "GameAssets"
+            end
+        end
+        table.insert(self.Towers, {
+            Name = towerName;
+            Model = clone;
+            AttackCD = 0;
+        })
+    end
 end
 
 function TowerManager:delete(towerIndex)

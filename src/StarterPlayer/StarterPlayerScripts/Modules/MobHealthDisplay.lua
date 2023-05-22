@@ -9,6 +9,8 @@ local PlayerChar = Player.Character or Player.CharacterAdded:Wait()
 local playerRootPart = PlayerChar:WaitForChild("HumanoidRootPart")
 local camera = Workspace.CurrentCamera
 
+local MobHealthDisplay = {}
+
 local function displayHealthBar(humanoid)
     local char = humanoid.Parent
     local maxHealth = humanoid.MaxHealth
@@ -50,9 +52,12 @@ local function displayHealthBar(humanoid)
     end)
 end
 
-
-while true do
-    for _, humanoid in pairs(game.Workspace:GetDescendants()) do
+function MobHealthDisplay.update(mobs)
+    for _, mob in pairs(mobs) do
+        local humanoid = mob.Object:FindFirstChild("Humanoid")
+        if not humanoid then
+            continue
+        end
         if humanoid:IsA("Humanoid") and humanoid.Parent ~= game.Players.LocalPlayer.Character then
             local char = humanoid.Parent
             local head = char.Head
@@ -68,5 +73,5 @@ while true do
             end
         end
     end
-    wait()
 end
+return MobHealthDisplay

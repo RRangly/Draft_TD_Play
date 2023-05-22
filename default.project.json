@@ -2,7 +2,6 @@
   "name": "Draft_TD_Play",
   "tree": {
     "$className": "DataModel",
-
     "ReplicatedStorage": {
       "ServerCommunication": {
         "$className": "RemoteEvent"
@@ -22,6 +21,15 @@
           "$className": "BindableEvent"
         },
         "GameStarted": {
+          "$className": "BindableEvent"
+        },
+        "BaseHpUpdate": {
+          "$className": "BindableEvent"
+        },
+        "WaveReady": {
+          "$className": "BindableEvent"
+        },
+        "WaveStart": {
           "$className": "BindableEvent"
         }
       },

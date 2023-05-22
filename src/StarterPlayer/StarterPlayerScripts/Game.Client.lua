@@ -4,18 +4,24 @@ local UserInputService = game:GetService("UserInputService")
 
 local Player = Players.LocalPlayer
 local PlayerScripts = Player.PlayerScripts
-local Modules = PlayerScripts.Modules
+local Modules = PlayerScripts:WaitForChild("Modules")
 
 local RemoteEvent = ReplicatedStorage.ServerCommunication
 local Draft = require(Modules:WaitForChild("Draft"))
-local TowerManager = require(Modules:WaitForChild("TowerManager"))
-
+--local TowerManager = require(Modules:WaitForChild("TowerManager"))
+local MobHealthDisplay = require(Modules:WaitForChild("MobHealthDisplay"))
+--local BaseHp = require(Modules:WaitForChild("BaseHp"))
+local HudManager = require(Modules:WaitForChild("HudManager"))
 
 local ClientEvents = ReplicatedStorage.ClientEvents
 local DraftBegin = ClientEvents.DraftBegin
 local CardsUpdate = ClientEvents.CardsUpdate
 local TowerUpdate = ClientEvents.TowerUpdate
 local GameStarted = ClientEvents.GameStarted
+local MobUpdate = ClientEvents.MobUpdate
+local BaseHpUpdate = ClientEvents.BaseHpUpdate
+local WaveReady = ClientEvents.WaveReady
+local WaveStart = ClientEvents.WaveStart
 
 local Data = {}
 
@@ -25,27 +31,52 @@ end)
 
 CardsUpdate.Event:Connect(function(cards)
     Data.Cards = cards
-    TowerManager.updateCards(cards)
+    HudManager.TowerManager.updateCards(cards)
 end)
 
+print("DraftBeginReady")
 DraftBegin.Event:Connect(function(cards)
+    print("BeginDraft")
     Draft.draftBegin(cards)
 end)
 
-GameStarted.Event:Wait()
+MobUpdate.Event:Connect(function(mobs)
+    MobHealthDisplay.update(mobs)
+end)
+
+BaseHpUpdate.Event:Connect(function(base)
+    Data.Base = base
+    HudManager.BaseManager.updateBaseHp(base)
+end)
+
+GameStarted.Event:Once(function(data)
+    HudManager.start()
+    HudManager.TowerManager.updateCards(data.Towers.Cards)
+    HudManager.BaseManager.updateBaseHp(data.Base)
+    HudManager.WaveManager.updateWave(data.Mobs.CurrentWave)
+end)
+
+WaveReady.Event:Connect(function(wave)
+    HudManager.WaveManager.starting(wave)
+end)
+
+WaveStart.Event:Connect(function(wave)
+    HudManager.WaveManager.updateWave(wave)
+end)
 
 UserInputService.InputBegan:Connect(function(inputObj)
-    local placing = TowerManager.Placing
-    if inputObj.UserInputType == Enum.UserInputType.MouseButton1 then
+    local placing = HudManager.TowerManager.Placing
+    if inputObj.KeyCode == Enum.KeyCode.E then
         if placing then
-            TowerManager.placeTower()
+            HudManager.TowerManager.placeTower()
         else
-            TowerManager.selectTower(Data.Towers)
+            if Data.Towers then
+                HudManager.TowerManager.selectTower(Data.Towers)
+            end
         end
     elseif inputObj.KeyCode == Enum.KeyCode.F then
         if placing then
-            placing.Model:Destroy()
-            placing.RenderConnection:Disconnect()
+            HudManager.TowerManager.cancelPlacement()
         end
     end
 end)
