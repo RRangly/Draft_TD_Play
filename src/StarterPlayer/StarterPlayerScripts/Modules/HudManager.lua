@@ -36,7 +36,7 @@ function TowerManager.checkPlacementAvailable(towerPosition)
     local rayCastParam = RaycastParams.new()
     rayCastParam.CollisionGroup = "Towers"
     local origin = Vector3.new(towerPosition.X, towerPosition.Y + 1, towerPosition.Z)
-    local ending = Vector3.new(towerPosition.X, towerPosition.Y - 1000, towerPosition.Z)
+    local ending = Vector3.new(towerPosition.X, towerPosition.Y - 3000, towerPosition.Z)
     local ray = Workspace:Raycast(origin, ending, rayCastParam)
     local mapType
     if ray then
