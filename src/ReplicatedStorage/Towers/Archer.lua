@@ -5,6 +5,10 @@ local Archer = {
         AttackRange = 25;
         Damage = 25;
         Cost = 400;
+    };
+    Placement = {
+        Area = 1;
+        Type = "Plain";
     }
 }
 

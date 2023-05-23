@@ -96,24 +96,22 @@ end
 function TowerManager:checkPlacementAvailable(towerPosition)
     local rayCastParam = RaycastParams.new()
     rayCastParam.CollisionGroup = "Towers"
-    local ray = Workspace:Raycast(Vector3.new(towerPosition.X, towerPosition.Y + 1, towerPosition.Z), Vector3.new(towerPosition.X, towerPosition.Y - 10, towerPosition.Z), rayCastParam)
-    local mapType
-    if ray then
-        mapType = ray.Instance:GetAttribute("MapType")
-        print("MapType", mapType)
-        if mapType == "Cliff" or mapType == "Plain" then
-            return mapType
-        end
-    end
-    return false
+    local origin = Vector3.new(towerPosition.X, towerPosition.Y + 1, towerPosition.Z)
+    local ending = Vector3.new(towerPosition.X, towerPosition.Y - 3000, towerPosition.Z)
+    return Workspace:Raycast(origin, ending, rayCastParam)
 end
 
 function TowerManager:place(towerName, position)
-    --local tower = require(Towers:FindFirstChild(towerName))
-    if TowerManager:checkPlacementAvailable(position) then
+    local tower = require(Towers:FindFirstChild(towerName))
+    local ray = TowerManager:checkPlacementAvailable(position)
+    if ray then
+        local mapType = ray.Instance:GetAttribute("MapType")
+        if mapType ~= tower.Placement.Type then
+            return
+        end
         local clone = TowerModels:FindFirstChild(towerName):Clone()
         clone.Parent = WorkSpaceTower
-        clone:MoveTo(Vector3.new(position.X, 5, position.Z))
+        clone:MoveTo(Vector3.new(position.X, ray.Position.Y, position.Z))
         for _, part in pairs(clone:GetDescendants()) do
             if part:IsA("BasePart") then
                 part.Anchored = true

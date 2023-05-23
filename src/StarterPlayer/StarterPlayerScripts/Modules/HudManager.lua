@@ -32,7 +32,7 @@ function TowerManager.mouseRayCast()
     end
 end
 
-function TowerManager.checkPlacementAvailable(towerPosition)
+function TowerManager.checkPlacementAvailable(towerType, towerPosition)
     local rayCastParam = RaycastParams.new()
     rayCastParam.CollisionGroup = "Towers"
     local origin = Vector3.new(towerPosition.X, towerPosition.Y + 1, towerPosition.Z)
@@ -41,11 +41,9 @@ function TowerManager.checkPlacementAvailable(towerPosition)
     local mapType
     if ray then
         mapType = ray.Instance:GetAttribute("MapType")
-        print("MapType", mapType)
-        if mapType == "Cliff" or mapType == "Plain" then
-            return mapType
+        if mapType == towerType then
+            return true
         end
-        print("rayDebug", towerPosition, "|", origin, "|", ending, "|", ray.Position)
     end
     return false
 end
@@ -114,11 +112,11 @@ RunService.RenderStepped:Connect(function()
         TowerManager.RayCast = {}
         TowerManager.RayCast.Part = rayCast[1]
         TowerManager.RayCast.Position = rayCast[2]
-        placeable = TowerManager.checkPlacementAvailable(rayCast[2])
     else
         TowerManager.RayCast = nil
     end
     if TowerManager.Placing then
+        local towerInfo = require(Towers:FindFirstChild(TowerManager.Placing.Tower))
         if rayCast then
             if not TowerManager.Placing.Model then
                 print("ModelReplace")
@@ -132,10 +130,10 @@ RunService.RenderStepped:Connect(function()
                         part.CanTouch = false
                         part.CanQuery = false
                         part.Material = Enum.Material.ForceField
-                        print("Placeable", placeable)
                     end
                 end
             end
+            placeable = TowerManager.checkPlacementAvailable(towerInfo.Placement.Type, rayCast[2])
             TowerManager.Placing.Model:MoveTo(TowerManager.RayCast.Position)
             local model = TowerManager.Placing.Model
             for _, part in pairs(model:GetDescendants()) do

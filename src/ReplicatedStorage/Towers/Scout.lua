@@ -6,6 +6,10 @@ local Scout = {
         Damage = 15;
         Cost = 100;
     };
+    Placement = {
+        Area = 1;
+        Type = "Plain";
+    }
 }
 
 return Scout

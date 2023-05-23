@@ -6,5 +6,9 @@ local Minigunner = {
         Damage = 5;
         Cost = 250;
     };
+    Placement = {
+        Area = 1;
+        Type = "Plain";
+    }
 }
 return Minigunner

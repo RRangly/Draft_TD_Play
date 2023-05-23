@@ -6,6 +6,10 @@ local Gunner = {
         Damage = 15;
         Cost = 300;
     };
+    Placement = {
+        Area = 1;
+        Type = "Plain";
+    }
 }
 
 return Gunner
