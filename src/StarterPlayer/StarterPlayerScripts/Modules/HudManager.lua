@@ -4,6 +4,7 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 
+local SoundFX = ReplicatedStorage.SoundFX
 
 local Towers = ReplicatedStorage.Towers
 local TowerModels = ReplicatedStorage.TowerModels
@@ -55,9 +56,18 @@ function TowerManager.startPlacement(tower)
     }
 end
 
-function TowerManager.placeTower()
+function TowerManager.placeTower(coins)
     local placing = TowerManager.Placing
     local rayCast = TowerManager.RayCast
+    if not rayCast then
+        return
+    end
+    local towerInfo = require(Towers:FindFirstChild(TowerManager.Placing.Tower))
+    local placeable = TowerManager.checkPlacementAvailable(towerInfo.Placement.Type, rayCast.Position)
+    if not placeable or coins < towerInfo.Stats.Cost then
+        print("CantPlace")
+        return
+    end
     if placing.Model then
         placing.Model:Destroy()
     end
@@ -97,6 +107,7 @@ function TowerManager.updateCards(cards)
         frame.Parent = CurrentGui.TowersFrame
         frame.Position = UDim2.new(xInterval * i, 0, 0, 0)
         frame.TowerName.Text = towerInfo.Name
+        frame.CostLabel.Text = towerInfo.Stats.Cost
         frame.InputBegan:Connect(function(inputObj)
             if inputObj.UserInputType == Enum.UserInputType.MouseButton1 then
                 TowerManager.startPlacement(tower)
@@ -181,7 +192,7 @@ function WaveManager.starting(wave)
     local message = CurrentGui.WaveStartingMessage
     message.Visible = true
     for i = 5, 1, -1 do
-        message.Text = wave .. " Starting in "..  i .. " seconds"
+        message.Text = "Wave ".. wave .. " Starting in "..  i .. " seconds"
         task.wait(1)
     end
     message.Visible = false
@@ -189,12 +200,23 @@ end
 
 function WaveManager.updateWave(wave)
     local waveText = CurrentGui.WaveText
-    waveText.Text = "Wave" .. wave
+    waveText.Text = "Wave " .. wave
 end
+
+local CoinManager = {}
+
+function CoinManager.updateCoins(coins)
+    local audio = SoundFX.Money_Gain
+    audio:Play()
+    local coinText = CurrentGui.CoinText
+    coinText.Text = "Coins " .. coins.Coins
+end
+
 local HudManager = {
     BaseManager = BaseManager;
     TowerManager = TowerManager;
     WaveManager = WaveManager;
+    CoinManager = CoinManager;
 }
 
 function HudManager.start()

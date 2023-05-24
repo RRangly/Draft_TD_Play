@@ -81,7 +81,6 @@ function MobManager:startMovement(mobIndex, wayPoints)
         if wayPoints[i] then
             humanoid:MoveTo(wayPoints[i])
         else
-            table.remove(self.Mobs, mobIndex)
             healthReduction = 1
         end
     end)

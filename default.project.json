@@ -31,6 +31,9 @@
         },
         "WaveStart": {
           "$className": "BindableEvent"
+        },
+        "CoinUpdate": {
+          "$className": "BindableEvent"
         }
       },
       "Towers": {

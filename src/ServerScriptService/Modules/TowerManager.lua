@@ -101,29 +101,34 @@ function TowerManager:checkPlacementAvailable(towerPosition)
     return Workspace:Raycast(origin, ending, rayCastParam)
 end
 
-function TowerManager:place(towerName, position)
+function TowerManager:place(towerName, position, coins)
     local tower = require(Towers:FindFirstChild(towerName))
-    local ray = TowerManager:checkPlacementAvailable(position)
-    if ray then
-        local mapType = ray.Instance:GetAttribute("MapType")
-        if mapType ~= tower.Placement.Type then
-            return
-        end
-        local clone = TowerModels:FindFirstChild(towerName):Clone()
-        clone.Parent = WorkSpaceTower
-        clone:MoveTo(Vector3.new(position.X, ray.Position.Y, position.Z))
-        for _, part in pairs(clone:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.Anchored = true
-                part.CollisionGroup = "GameAssets"
+    local cost = tower.Stats.Cost
+    if coins.Coins >= cost then
+        local ray = TowerManager:checkPlacementAvailable(position)
+        if ray then
+            local mapType = ray.Instance:GetAttribute("MapType")
+            if mapType == tower.Placement.Type then
+                local clone = TowerModels:FindFirstChild(towerName):Clone()
+                clone.Parent = WorkSpaceTower
+                clone:MoveTo(Vector3.new(position.X, ray.Position.Y, position.Z))
+                for _, part in pairs(clone:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.Anchored = true
+                        part.CollisionGroup = "GameAssets"
+                    end
+                end
+                coins.Coins -= cost
+                table.insert(self.Towers, {
+                    Name = towerName;
+                    Model = clone;
+                    AttackCD = 0;
+                })
+            return true
             end
         end
-        table.insert(self.Towers, {
-            Name = towerName;
-            Model = clone;
-            AttackCD = 0;
-        })
     end
+    return false
 end
 
 function TowerManager:delete(towerIndex)

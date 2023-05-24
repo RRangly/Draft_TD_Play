@@ -14,6 +14,7 @@ local MobManager = require(Modules.MobManager)
 local MapManager = require(Modules.MapManager)
 local TowerManager = require(Modules.TowerManager)
 local BaseManager = require(Modules.BaseManager)
+local CoinManager = require(Modules.CoinManager)
 
 local PlayingPlayers = {}
 local Game = {}
@@ -21,22 +22,18 @@ local PlayerDatas = {}
 
 function Game.runUpdate(playerIndex, deltaTime)
     local towerManager = PlayerDatas[playerIndex].Towers
+    local mobManager = PlayerDatas[playerIndex].Mobs
+    local coinManager = PlayerDatas[playerIndex].Coins
     for i, _ in pairs(towerManager.Towers) do
         towerManager:towerUpdate(i, PlayerDatas[playerIndex].Mobs, deltaTime)
     end
-    local mobManager = PlayerDatas[playerIndex].Mobs
     local wayPoints = PlayerDatas[playerIndex].Map.WayPoints
     for i, mob in pairs(mobManager.Mobs) do
         local hum = mob.Object:FindFirstChild("Humanoid")
-        if not hum then
+        if not hum or hum.Health <= 0 then
             table.remove(mobManager.Mobs, i)
-            continue
-        end
-        if hum.Health <= 0 then
-            table.remove(mobManager.Mobs, i)
-            if #mobManager.Mobs < 1 and #mobManager.PreSpawn < 1 then
-                mobManager:startWave()
-            end
+            coinManager.Coins += 10
+            RemoteEvent:FireClient(PlayerDatas[playerIndex].Player, "CoinUpdate", PlayerDatas[1].Coins)
             continue
         end
         local needAddition = true
@@ -112,8 +109,9 @@ function Game.singleTest(player)
     PlayerDatas[1].Map = MapManager.load("Basic", Vector3.new(0, 0, 100))
     PlayerDatas[1].Base = BaseManager.new()
     PlayerDatas[1].Mobs = MobManager.startGame()
+    PlayerDatas[1].Coins = CoinManager.new()
     task.wait(1)
-    PlayerDatas[1].Towers:place("Minigunner", Vector3.new(12.5, 5, 140))
+    PlayerDatas[1].Towers:place("Minigunner", Vector3.new(12.5, 5, 140), PlayerDatas[1].Coins)
     RemoteEvent:FireClient(player, "GameStarted", PlayerDatas[1])
     RemoteEvent:FireClient(player, "WaveReady", PlayerDatas[1].Mobs.CurrentWave + 1)
     PlayerDatas[1].Mobs:startWave()
@@ -124,7 +122,7 @@ function Game.singleTest(player)
         Game.runUpdate(1, deltaTime)
         updateTime += deltaTime
         if updateTime >= 0.1 then
-            RemoteEvent:FireClient(PlayerDatas[1].Player, "MobUpdate", PlayerDatas[1].Mobs.Mobs)
+            RemoteEvent:FireClient(PlayerDatas[1].Player, "MobUpdate", PlayerDatas[1].Mobs)
         end
     end)
 end
@@ -147,7 +145,11 @@ end)
 PlaceTower.Event:Connect(function(player, towerName, position)
     for _, data in pairs(PlayerDatas) do
         if data.Player == player then
-            data.Towers:place(towerName, position)
+            local placed = data.Towers:place(towerName, position, data.Coins)
+            if placed then
+                RemoteEvent:FireClient(player, "TowerUpdate", PlayerDatas[1].Towers)
+                RemoteEvent:FireClient(player, "CoinUpdate", PlayerDatas[1].Coins)
+            end
         end
     end
 end)
