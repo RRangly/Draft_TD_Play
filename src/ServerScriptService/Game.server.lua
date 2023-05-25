@@ -4,6 +4,9 @@ local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
 
+local Towers = ReplicatedStorage.Towers
+local ClientLoad = ReplicatedStorage.ClientLoad
+
 local RemoteEvent = ReplicatedStorage.ServerCommunication
 local DraftEnd = ServerStorage.ServerEvents.DraftEnd
 local PlaceTower = ServerStorage.ServerEvents.PlaceTower
@@ -24,8 +27,10 @@ function Game.runUpdate(playerIndex, deltaTime)
     local towerManager = PlayerDatas[playerIndex].Towers
     local mobManager = PlayerDatas[playerIndex].Mobs
     local coinManager = PlayerDatas[playerIndex].Coins
-    for i, _ in pairs(towerManager.Towers) do
-        towerManager:towerUpdate(i, PlayerDatas[playerIndex].Mobs, deltaTime)
+    for i, ti in pairs(towerManager.Towers) do
+        local tower = require(Towers:FindFirstChild(ti.Name))
+        tower.update(towerManager, i, mobManager, deltaTime)
+        --towerManager:towerUpdate(i, PlayerDatas[playerIndex].Mobs, deltaTime)
     end
     local wayPoints = PlayerDatas[playerIndex].Map.WayPoints
     for i, mob in pairs(mobManager.Mobs) do
@@ -110,6 +115,8 @@ function Game.singleTest(player)
     PlayerDatas[1].Base = BaseManager.new()
     PlayerDatas[1].Mobs = MobManager.startGame()
     PlayerDatas[1].Coins = CoinManager.new()
+    local fol = Instance.new("Folder", ClientLoad)
+    fol.Name = player.UserId
     task.wait(1)
     PlayerDatas[1].Towers:place("Minigunner", Vector3.new(12.5, 5, 140), PlayerDatas[1].Coins)
     RemoteEvent:FireClient(player, "GameStarted", PlayerDatas[1])

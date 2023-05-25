@@ -5,6 +5,8 @@ local SoundFX = ReplicatedStorage.SoundFX
 
 local TowerFXManager = {}
 
+local ManagingTowers = {}
+
 function TowerFXManager.attackAvailable(tower, mobs)
     local towerInfo = require(Towers:FindFirstChild(tower.Name))
     local towerPart = tower.Model.PrimaryPart
@@ -72,18 +74,20 @@ end
 
 function TowerFXManager.towerUpdate(tower, mobs, deltaTime)
     local towerInfo = require(Towers:FindFirstChild(tower.Name))
-    local attack = TowerFXManager.attackAvailable(tower, mobs.Mobs)
-    if attack then
-        tower.AttackCD += deltaTime
-        if tower.AttackCD >= towerInfo.Stats.AttackSpeed then
+    tower.AttackCD += deltaTime
+    if tower.AttackCD >= towerInfo.Stats.AttackSpeed then
+        local attack = TowerFXManager.attackAvailable(tower, mobs.Mobs)
+        if attack then
             print("Shoot")
             local sound = SoundFX.MinigunShot
+            towerInfo.playAnim(tower.Model)
             sound:Play()
-            tower.AttackCD = 0
         end
-    else
         tower.AttackCD = 0
     end
 end
 
+function TowerFXManager.loadClient(instance)
+    
+end
 return TowerFXManager

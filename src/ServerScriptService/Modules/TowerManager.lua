@@ -1,12 +1,27 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
+local ClientLoad = ReplicatedStorage.ClientLoad
 local TowerModels = ReplicatedStorage.TowerModels
 local Towers = ReplicatedStorage.Towers
 local WorkSpaceTower = Workspace.Towers
 
 local TowerManager = {}
 TowerManager.__index = TowerManager
+
+function TowerManager:playSound(player, soundName)
+    player = Instance.new("Player")
+    local folder = ClientLoad:FindFirstChild(player.UserId)
+    local instance = Instance.new("StringValue", folder)
+    instance.Name = "PlaySound"
+    instance.Value = soundName
+end
+
+function TowerManager:playAnimation(player, towerIndex)
+    local instance = Instance.new("IntValue", ClientLoad)
+    instance.Name = "PlayAnim"
+    instance.Value = towerIndex
+end
 
 function TowerManager:attackAvailable(towerIndex, mobs)
     local tower = self.Towers[towerIndex]
@@ -76,23 +91,6 @@ function TowerManager:findLowestHealth(towerIndex, mobs)
     return lowestHealthMob
 end
 
-function TowerManager:towerUpdate(towerIndex, mobs, deltaTime)
-    local tower = self.Towers[towerIndex]
-    local towerInfo = require(Towers:FindFirstChild(tower.Name))
-    if self:attackAvailable(towerIndex, mobs.Mobs) then
-        local model = tower.Model
-        local mobPart = mobs.Mobs[self:findClosestMob(towerIndex, mobs.Mobs)].Object.PrimaryPart
-        model:PivotTo(CFrame.new(model:GetPivot().Position, Vector3.new(mobPart.Position.X, model:GetPivot().Position.Y, mobPart.Position.Z)))
-        tower.AttackCD += deltaTime
-        if tower.AttackCD >= towerInfo.Stats.AttackSpeed then
-            tower.AttackCD = 0
-            mobs:TakeDamage(self:findClosestMob(towerIndex, mobs.Mobs), towerInfo.Stats.Damage)
-        end
-    else
-        tower.AttackCD = 0
-    end
-end
-
 function TowerManager:checkPlacementAvailable(towerPosition)
     local rayCastParam = RaycastParams.new()
     rayCastParam.CollisionGroup = "Towers"
@@ -123,6 +121,7 @@ function TowerManager:place(towerName, position, coins)
                     Name = towerName;
                     Model = clone;
                     AttackCD = 0;
+                    PreAttackCD = 0;
                 })
             return true
             end

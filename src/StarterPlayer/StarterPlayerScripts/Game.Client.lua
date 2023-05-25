@@ -91,6 +91,7 @@ UserInputService.InputBegan:Connect(function(inputObj)
     end
 end)
 
+--[[
 local exTime = 0
 local index = 1
 
@@ -111,5 +112,6 @@ RunService.Heartbeat:Connect(function(deltaTime)
             index = 1
         end
     end
-    
 end)
+
+]]
