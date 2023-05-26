@@ -5,7 +5,7 @@ local ClientLoad = ReplicatedStorage.ClientLoad
 local Minigunner = {
     Name = "Minigunner";
     Stats = {
-        PreAttack = 3;
+        PreAttack = 2;
         AttackSpeed = 0.2;
         AttackRange = 20;
         Damage = 5;
@@ -39,7 +39,8 @@ function Minigunner.update(player, towerManager, towerIndex, mobs, deltaTime)
         if tower.AttackCD >= Minigunner.Stats.AttackSpeed then
             tower.AttackCD = 0
             mobs:TakeDamage(towerManager:findClosestMob(towerIndex, mobs.Mobs), Minigunner.Stats.Damage)
-            towerManager:playSound("MinigunShot")
+            towerManager:playSound(player, "MinigunShot")
+            towerManager:playAnimation(player, towerIndex)
         end
     else
         tower.AttackCD = 0
