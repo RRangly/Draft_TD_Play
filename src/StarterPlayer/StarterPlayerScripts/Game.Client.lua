@@ -3,6 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
+
 local Player = Players.LocalPlayer
 local PlayerScripts = Player.PlayerScripts
 local Modules = PlayerScripts:WaitForChild("Modules")
@@ -12,8 +13,9 @@ local Draft = require(Modules:WaitForChild("Draft"))
 local MobHealthDisplay = require(Modules:WaitForChild("MobHealthDisplay"))
 local HudManager = require(Modules:WaitForChild("HudManager"))
 local TowerFXManager = require(Modules:FindFirstChild("TowerFXManager"))
+local GameFXManager = require(Modules:WaitForChild("GameFXManager"))
 
-local Towers = ReplicatedStorage.Towers
+local PlayerGui = Player.PlayerGui
 
 local ClientEvents = ReplicatedStorage.ClientEvents
 local DraftBegin = ClientEvents.DraftBegin
@@ -74,19 +76,25 @@ CoinsUpdate.Event:Connect(function(coins)
     HudManager.CoinManager.updateCoins(coins)
 end)
 
-UserInputService.InputBegan:Connect(function(inputObj)
-    local placing = HudManager.TowerManager.Placing
-    if inputObj.KeyCode == Enum.KeyCode.E then
-        if placing and Data.Coins then
-            HudManager.TowerManager.placeTower(Data.Coins.Coins)
-        else
-            if Data.Towers then
-                HudManager.TowerManager.selectTower(Data.Towers)
+UserInputService.InputBegan:Connect(function(inputObj, processed)
+    if processed then
+        return
+    end
+    local mouseLocation = UserInputService:GetMouseLocation()
+    local frames = PlayerGui:GetGuiObjectsAtPosition(mouseLocation.X, mouseLocation.Y)
+    print("Input", frames, #frames)
+    if #frames == 0 then
+        local placing = HudManager.TowerManager.Placing
+        if inputObj.UserInputType == Enum.UserInputType.MouseButton1 then
+            if placing then
+                HudManager.TowerManager.placeTower(Data.Coins.Coins)
+            elseif Data.Towers then
+                HudManager.TowerManager.selectTower(Data.Towers.Towers)
             end
-        end
-    elseif inputObj.KeyCode == Enum.KeyCode.F then
-        if placing then
-            HudManager.TowerManager.cancelPlacement()
+        elseif inputObj.KeyCode == Enum.KeyCode.F then
+            if placing then
+                HudManager.TowerManager.cancelPlacement()
+            end
         end
     end
 end)
@@ -113,5 +121,13 @@ RunService.Heartbeat:Connect(function(deltaTime)
         end
     end
 end)
-
 ]]
+
+RunService.Heartbeat:Connect(function()
+    local ClientLoad = ReplicatedStorage.ClientLoad:FindFirstChild(Player.UserId)
+    if ClientLoad and Data then
+        for _, instance in pairs(ClientLoad:GetChildren()) do
+            GameFXManager.executeLoad(Data, instance)
+        end
+    end
+end)

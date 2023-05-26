@@ -10,17 +10,31 @@ local TowerManager = {}
 TowerManager.__index = TowerManager
 
 function TowerManager:playSound(player, soundName)
-    player = Instance.new("Player")
     local folder = ClientLoad:FindFirstChild(player.UserId)
     local instance = Instance.new("StringValue", folder)
     instance.Name = "PlaySound"
     instance.Value = soundName
+    task.wait(0.2)
+    instance:Destroy()
 end
 
 function TowerManager:playAnimation(player, towerIndex)
-    local instance = Instance.new("IntValue", ClientLoad)
+    local folder = ClientLoad:FindFirstChild(player.UserId)
+    local instance = Instance.new("IntValue", folder)
     instance.Name = "PlayAnim"
     instance.Value = towerIndex
+    task.wait(0.2)
+    instance:Destroy()
+end
+
+function TowerManager:playParticle(player, towerIndex, target)
+    local folder = ClientLoad:FindFirstChild(player.UserId)
+    local instance = Instance.new("StringValue", folder)
+    instance.Name = "PlayParticle"
+    instance.Value = towerIndex
+    instance:SetAttribute("Target", target)
+    task.wait(0.2)
+    instance:Destroy()
 end
 
 function TowerManager:attackAvailable(towerIndex, mobs)
@@ -49,7 +63,6 @@ function TowerManager:findClosestMob(towerIndex, mobs)
     local towerInfo = require(Towers:FindFirstChild(tower.Name))
     local towerPart = tower.Model.PrimaryPart
     local towerVector = Vector3.new(towerPart.Position.X, 0, towerPart.Position.Z)
-
     local closestMob = nil
     local closestDistance = towerInfo.Stats.AttackRange
     for i, mob in pairs(mobs) do
@@ -109,13 +122,13 @@ function TowerManager:place(towerName, position, coins)
             if mapType == tower.Placement.Type then
                 local clone = TowerModels:FindFirstChild(towerName):Clone()
                 clone.Parent = WorkSpaceTower
-                clone:MoveTo(Vector3.new(position.X, ray.Position.Y, position.Z))
                 for _, part in pairs(clone:GetDescendants()) do
                     if part:IsA("BasePart") then
                         part.Anchored = true
-                        part.CollisionGroup = "GameAssets"
+                        part.CollisionGroup = "Towers"
                     end
                 end
+                clone:MoveTo(Vector3.new(position.X, ray.Position.Y, position.Z))
                 coins.Coins -= cost
                 table.insert(self.Towers, {
                     Name = towerName;

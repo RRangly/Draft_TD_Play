@@ -20,11 +20,11 @@ local CurrentGui
 
 local TowerManager = {}
 
-function TowerManager.mouseRayCast()
+function TowerManager.mouseRayCast(collisionGroup)
     local mousePosition = UserInputService:GetMouseLocation()
     local ray = Camera:ViewportPointToRay(mousePosition.X, mousePosition.Y)
     local rayCastParam = RaycastParams.new()
-    rayCastParam.CollisionGroup = "Towers"
+    rayCastParam.CollisionGroup = collisionGroup
     local rayResult = Workspace:Raycast(ray.Origin, ray.Direction * 100, rayCastParam)
     if rayResult then
         return {rayResult.Instance, rayResult.Position}
@@ -43,7 +43,7 @@ function TowerManager.checkPlacementAvailable(towerType, towerPosition)
     if ray then
         mapType = ray.Instance:GetAttribute("MapType")
         if mapType == towerType then
-            return true
+            return ray
         end
     end
     return false
@@ -84,14 +84,16 @@ function TowerManager.cancelPlacement()
 end
 
 function TowerManager.selectTower(towers)
-    local rayCast = TowerManager.RayCast
+    local rayCast = TowerManager.mouseRayCast("EveryThing")
     for i, tower in pairs(towers) do
-        local model = rayCast.Part.Parent
-        if model == tower.Model then
+        local model = rayCast[1]:IsDescendantOf(tower.Model)
+        if model then
             TowerManager.Selected = {
                 Index = i;
                 TowerInfo = tower;
             }
+            print("Selected", TowerManager.Selected)
+            return TowerManager.Selected
         else
             TowerManager.Selected = nil
         end
@@ -117,7 +119,7 @@ function TowerManager.updateCards(cards)
 end
 
 RunService.RenderStepped:Connect(function()
-    local rayCast = TowerManager.mouseRayCast()
+    local rayCast = TowerManager.mouseRayCast("Towers")
     local placeable
     if rayCast then
         TowerManager.RayCast = {}
@@ -137,7 +139,6 @@ RunService.RenderStepped:Connect(function()
                 for _, part in pairs(model:GetDescendants()) do
                     if part:IsA("BasePart") then
                         part.CollisionGroup = "Towers"
-                        part.CanCollide = false
                         part.CanTouch = false
                         part.CanQuery = false
                         part.Material = Enum.Material.ForceField
@@ -145,7 +146,14 @@ RunService.RenderStepped:Connect(function()
                 end
             end
             placeable = TowerManager.checkPlacementAvailable(towerInfo.Placement.Type, rayCast[2])
-            TowerManager.Placing.Model:MoveTo(TowerManager.RayCast.Position)
+            local pos = TowerManager.RayCast.Position
+            local yUpper = TowerManager.Placing.Model:GetExtentsSize().Y / 2
+            if placeable then
+                TowerManager.Placing.Model:MoveTo(Vector3.new(pos.X, placeable.Position.Y + yUpper, pos.Z))
+            else
+                
+                TowerManager.Placing.Model:MoveTo(Vector3.new(pos.X, pos.Y + yUpper, pos.Z))
+            end
             local model = TowerManager.Placing.Model
             for _, part in pairs(model:GetDescendants()) do
                 if part:IsA("BasePart") then

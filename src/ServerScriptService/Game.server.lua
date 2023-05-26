@@ -27,9 +27,10 @@ function Game.runUpdate(playerIndex, deltaTime)
     local towerManager = PlayerDatas[playerIndex].Towers
     local mobManager = PlayerDatas[playerIndex].Mobs
     local coinManager = PlayerDatas[playerIndex].Coins
+    local player = PlayerDatas[playerIndex].Player
     for i, ti in pairs(towerManager.Towers) do
         local tower = require(Towers:FindFirstChild(ti.Name))
-        tower.update(towerManager, i, mobManager, deltaTime)
+        tower.update(player, towerManager, i, mobManager, deltaTime)
         --towerManager:towerUpdate(i, PlayerDatas[playerIndex].Mobs, deltaTime)
     end
     local wayPoints = PlayerDatas[playerIndex].Map.WayPoints
@@ -38,7 +39,7 @@ function Game.runUpdate(playerIndex, deltaTime)
         if not hum or hum.Health <= 0 then
             table.remove(mobManager.Mobs, i)
             coinManager.Coins += 10
-            RemoteEvent:FireClient(PlayerDatas[playerIndex].Player, "CoinUpdate", PlayerDatas[1].Coins)
+            RemoteEvent:FireClient(player, "CoinUpdate", PlayerDatas[1].Coins)
             continue
         end
         local needAddition = true
@@ -52,15 +53,15 @@ function Game.runUpdate(playerIndex, deltaTime)
                 local healthReduction = mobManager:startMovement(i, wayPoints)
                 if healthReduction > 0 then
                     PlayerDatas[playerIndex].Base.Health -= healthReduction
-                    RemoteEvent:FireClient(PlayerDatas[playerIndex].Player, "BaseHpUpdate", PlayerDatas[playerIndex].Base)
+                    RemoteEvent:FireClient(player, "BaseHpUpdate", PlayerDatas[playerIndex].Base)
                 end
             end)
         end
     end
     if #mobManager.Mobs < 1 and #mobManager.PreSpawn < 1 and not mobManager.Starting then
-        RemoteEvent:FireClient(PlayerDatas[playerIndex].Player, "WaveReady", PlayerDatas[1].Mobs.CurrentWave + 1)
+        RemoteEvent:FireClient(player, "WaveReady", PlayerDatas[1].Mobs.CurrentWave + 1)
         mobManager:startWave()
-        RemoteEvent:FireClient(PlayerDatas[playerIndex].Player, "WaveStart", PlayerDatas[1].Mobs.CurrentWave)
+        RemoteEvent:FireClient(player, "WaveStart", PlayerDatas[1].Mobs.CurrentWave)
     end
 end
 
@@ -140,6 +141,7 @@ Players.PlayerAdded:Connect(function(player)
         wait()
     until player:HasAppearanceLoaded()
     task.wait(3)
+    print("GameStarting")
     Game.singleTest(player)
     --[[
     table.insert(PlayingPlayers, player)
