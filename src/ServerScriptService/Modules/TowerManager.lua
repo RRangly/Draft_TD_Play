@@ -40,6 +40,7 @@ end
 function TowerManager:attackAvailable(towerIndex, mobs)
     local tower = self.Towers[towerIndex]
     local towerInfo = require(Towers:FindFirstChild(tower.Name))
+    local range = towerInfo.Stats[tower.Level].AttackRange
     local towerPart = tower.Model.PrimaryPart
     local towerVector = Vector3.new(towerPart.Position.X, 0, towerPart.Position.Z)
 
@@ -50,7 +51,7 @@ function TowerManager:attackAvailable(towerIndex, mobs)
         end
         local mobVector = Vector3.new(mobPart.Position.X, 0, mobPart.Position.Z)
         local mobDistance = (mobVector - towerVector).Magnitude
-        if mobDistance < towerInfo.Stats.AttackRange then
+        if mobDistance < range then
             return true
         end
     end
@@ -64,7 +65,7 @@ function TowerManager:findClosestMob(towerIndex, mobs)
     local towerPart = tower.Model.PrimaryPart
     local towerVector = Vector3.new(towerPart.Position.X, 0, towerPart.Position.Z)
     local closestMob = nil
-    local closestDistance = towerInfo.Stats.AttackRange
+    local closestDistance = towerInfo.Stats[tower.Level].AttackRange
     for i, mob in pairs(mobs) do
         local mobPart = mob.Object.PrimaryPart
         if not mobPart then continue end
@@ -82,7 +83,7 @@ end
 function TowerManager:findLowestHealth(towerIndex, mobs)
     local tower = self.Towers[towerIndex]
     local towerInfo = require(Towers:FindFirstChild(tower.Name))
-    local range = towerInfo.Stats.AttackRange
+    local range = towerInfo.Stats[tower.Level].AttackRange
     local towerPart = tower.Model.PrimaryPart
     local towerVector = Vector3.new(towerPart.Position.X, 0, towerPart.Position.Z)
 
@@ -114,7 +115,7 @@ end
 
 function TowerManager:place(towerName, position, coins)
     local tower = require(Towers:FindFirstChild(towerName))
-    local cost = tower.Stats.Cost
+    local cost = tower.Stats[1].Cost
     if coins.Coins >= cost then
         local ray = TowerManager:checkPlacementAvailable(position)
         if ray then
@@ -135,6 +136,7 @@ function TowerManager:place(towerName, position, coins)
                     Model = clone;
                     AttackCD = 0;
                     PreAttackCD = 0;
+                    Level = 1;
                 })
             return true
             end

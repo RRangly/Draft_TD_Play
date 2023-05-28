@@ -20,6 +20,62 @@ local CurrentGui
 
 local TowerManager = {}
 
+function TowerManager.statChange(textLabel, index, statName, present, upgrade)
+    textLabel.TextSize = 28
+    textLabel.TextXAlignment = Enum.TextXAlignment.Left
+    textLabel.Position = UDim2.new(0, 10, index * 0.1, 10)
+    --textLabel = Instance.new("TextLabel")
+    textLabel.Font = Enum.Font.SourceSans
+    textLabel.Text = statName .. ": " .. present .. " -> " .. upgrade
+end
+
+function TowerManager.updateSelection(towers, towerIndex)
+    if TowerManager.SelectFrame then
+        TowerManager.SelectFrame:Destroy()
+    end
+    if not towerIndex then
+        return
+    end
+    local tower = towers[towerIndex]
+    local towerInfo = require(Towers:FindFirstChild(tower.Name))
+    local presentStats = towerInfo.Stats[tower.Level]
+    local clone = PlayerGuiAssets.TowerSelectFrame:Clone()
+    TowerManager.SelectFrame = clone
+    clone.Parent = CurrentGui
+
+    local present = clone.Present
+    local towerLevel = present.TowerLevel
+    towerLevel.Text = tower.Level
+    local towerName = present.TowerName
+    towerName.Text = tower.Name
+    local sellButton = present.Sell
+    sellButton.MouseButton1Click:Connect(function()
+        RemoteEvent:FireServer("SellTower", towerIndex)
+    end)
+
+    local upgrade = clone.Upgrade
+    local upgradeStats = towerInfo.Stats[tower.Level + 1]
+    local nextName = upgrade.NextName
+    nextName.Text = upgradeStats.LevelName
+    local nextLevel = upgrade.NextLevel
+    nextLevel.Text = tower.Level + 1
+    local statChangeList = upgrade.StatChangeList
+    local index = 0
+    for statName, statVal in pairs(presentStats) do
+        if statName == "LevelName" then
+            continue
+        end
+        if upgradeStats[statName] ~= statVal then
+            TowerManager.statChange(Instance.new("TextLabel", statChangeList), index, statName, statVal, upgradeStats[statName])
+            index += 1
+        end
+    end
+    local upgradeButton = upgrade.Upgrade
+    upgradeButton.MouseButton1Click:Connect(function()
+        RemoteEvent:FireServer("UpgradeServer", towerIndex)
+    end)
+end
+
 function TowerManager.mouseRayCast(collisionGroup)
     local mousePosition = UserInputService:GetMouseLocation()
     local ray = Camera:ViewportPointToRay(mousePosition.X, mousePosition.Y)
@@ -93,11 +149,12 @@ function TowerManager.selectTower(towers)
                 TowerInfo = tower;
             }
             print("Selected", TowerManager.Selected)
+            TowerManager.updateSelection(towers, i)
             return TowerManager.Selected
-        else
-            TowerManager.Selected = nil
         end
     end
+    TowerManager.Selected = nil
+    TowerManager.updateSelection(towers, nil)
 end
 
 function TowerManager.updateCards(cards)
@@ -109,7 +166,7 @@ function TowerManager.updateCards(cards)
         frame.Parent = CurrentGui.TowersFrame
         frame.Position = UDim2.new(xInterval * i, 0, 0, 0)
         frame.TowerName.Text = towerInfo.Name
-        frame.CostLabel.Text = towerInfo.Stats.Cost
+        frame.CostLabel.Text = towerInfo.Stats[1].Cost
         frame.InputBegan:Connect(function(inputObj)
             if inputObj.UserInputType == Enum.UserInputType.MouseButton1 then
                 TowerManager.startPlacement(tower)

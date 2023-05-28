@@ -82,7 +82,6 @@ UserInputService.InputBegan:Connect(function(inputObj, processed)
     end
     local mouseLocation = UserInputService:GetMouseLocation()
     local frames = PlayerGui:GetGuiObjectsAtPosition(mouseLocation.X, mouseLocation.Y)
-    print("Input", frames, #frames)
     if #frames == 0 then
         local placing = HudManager.TowerManager.Placing
         if inputObj.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -99,7 +98,7 @@ UserInputService.InputBegan:Connect(function(inputObj, processed)
     end
 end)
 
---[[
+--[[ 
 local exTime = 0
 local index = 1
 
