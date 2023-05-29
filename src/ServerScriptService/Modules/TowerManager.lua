@@ -76,7 +76,6 @@ function TowerManager:findClosestMob(towerIndex, mobs)
             closestDistance = mobDistance
         end
     end
-
     return closestMob
 end
 
@@ -101,8 +100,38 @@ function TowerManager:findLowestHealth(towerIndex, mobs)
             lowestHealthMob = i
         end
     end
-
     return lowestHealthMob
+end
+
+function TowerManager:findFirstMob(towerIndex, mobs, waypoints)
+    local tower = self.Towers[towerIndex]
+    local towerInfo = require(Towers:FindFirstChild(tower.Name))
+    local range = towerInfo.Stats[tower.Level].AttackRange
+    local towerPart = tower.Model.PrimaryPart
+    local towerVector = Vector3.new(towerPart.Position.X, 0, towerPart.Position.Z)
+
+    local FirstMob = nil
+    local FirstWaypoint = 0
+    local FirstDistance = 0
+    for i, mob in pairs(mobs) do
+        local mobPart = mob.Object.PrimaryPart
+        if not mobPart then continue end
+        local mobVector = Vector3.new(mobPart.Position.X, 0, mobPart.Position.Z)
+        local mobDistance = (mobVector - towerVector).Magnitude
+        if mobDistance < range then
+            if mob.Waypoint >= FirstWaypoint then
+                local waypoint = waypoints[mob.Waypoint - 1]
+                local waypointVector = Vector3.new(waypoint.X, 0, waypoint.Z)
+                local waypointDistance = (mobVector - waypointVector).Magnitude
+                if waypointDistance > FirstDistance then
+                    FirstMob = i
+                    FirstDistance = waypointDistance
+                    FirstWaypoint = mob.Waypoint
+                end
+            end
+        end
+    end
+    return FirstMob
 end
 
 function TowerManager:checkPlacementAvailable(towerPosition)
@@ -137,6 +166,7 @@ function TowerManager:place(towerName, position, coins)
                     AttackCD = 0;
                     PreAttackCD = 0;
                     Level = 1;
+                    Target = "Closest";
                 })
             return true
             end

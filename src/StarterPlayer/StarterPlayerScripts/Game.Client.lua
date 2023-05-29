@@ -14,6 +14,7 @@ local MobHealthDisplay = require(Modules:WaitForChild("MobHealthDisplay"))
 local HudManager = require(Modules:WaitForChild("HudManager"))
 local TowerFXManager = require(Modules:FindFirstChild("TowerFXManager"))
 local GameFXManager = require(Modules:WaitForChild("GameFXManager"))
+local Data = require(Modules:WaitForChild("Data"))
 
 local PlayerGui = Player.PlayerGui
 
@@ -28,15 +29,14 @@ local WaveReady = ClientEvents.WaveReady
 local WaveStart = ClientEvents.WaveStart
 local CoinsUpdate = ClientEvents.CoinUpdate
 
-local Data = {}
-
 TowerUpdate.Event:Connect(function(towers)
     Data.Towers = towers
+    HudManager.TowerManager.updateSelection(Data.Coins, towers.Towers, HudManager.TowerManager.Selected.Index)
 end)
 
 CardsUpdate.Event:Connect(function(cards)
     Data.Cards = cards
-    HudManager.TowerManager.updateCards(cards)
+    HudManager.TowerManager.updateCards()
 end)
 
 print("DraftBeginReady")
@@ -73,6 +73,7 @@ WaveStart.Event:Connect(function(wave)
 end)
 
 CoinsUpdate.Event:Connect(function(coins)
+    Data.Coins = coins
     HudManager.CoinManager.updateCoins(coins)
 end)
 
@@ -88,7 +89,7 @@ UserInputService.InputBegan:Connect(function(inputObj, processed)
             if placing then
                 HudManager.TowerManager.placeTower(Data.Coins.Coins)
             elseif Data.Towers then
-                HudManager.TowerManager.selectTower(Data.Towers.Towers)
+                HudManager.TowerManager.selectTower(Data.Coins, Data.Towers.Towers)
             end
         elseif inputObj.KeyCode == Enum.KeyCode.F then
             if placing then

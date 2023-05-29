@@ -76,10 +76,12 @@ function MobManager:startMovement(mobIndex, wayPoints)
     table.insert(self.CurrentMoving, humanoid)
     mob.Object:MoveTo(wayPoints[1])
     humanoid:MoveTo(wayPoints[i])
+    mob.Waypoint = i
     moveConnection = humanoid.MoveToFinished:Connect(function()
         i += 1
         if wayPoints[i] then
             humanoid:MoveTo(wayPoints[i])
+            mob.Waypoint = i
         else
             healthReduction = 1
         end
@@ -108,7 +110,8 @@ function MobManager.startGame()
         Mobs = {};
         PreSpawn = {};
         CurrentMoving = {};
-        Starting = true
+        Starting = true;
+        Waypoint = 1;
     }
     setmetatable(mobs, MobManager)
     return mobs

@@ -10,6 +10,7 @@ local ClientLoad = ReplicatedStorage.ClientLoad
 local RemoteEvent = ReplicatedStorage.ServerCommunication
 local DraftEnd = ServerStorage.ServerEvents.DraftEnd
 local PlaceTower = ServerStorage.ServerEvents.PlaceTower
+local ManageTower = ServerStorage.ServerEvents.ManageTower
 
 local Modules = ServerScriptService.Modules
 local Draft = require(Modules.Draft)
@@ -30,7 +31,7 @@ function Game.runUpdate(playerIndex, deltaTime)
     local player = PlayerDatas[playerIndex].Player
     for i, ti in pairs(towerManager.Towers) do
         local tower = require(Towers:FindFirstChild(ti.Name))
-        tower.update(player, towerManager, i, mobManager, deltaTime)
+        tower.update(player, towerManager, i, mobManager, PlayerDatas[playerIndex].Map.WayPoints, deltaTime)
         --towerManager:towerUpdate(i, PlayerDatas[playerIndex].Mobs, deltaTime)
     end
     local wayPoints = PlayerDatas[playerIndex].Map.WayPoints
@@ -156,8 +157,44 @@ PlaceTower.Event:Connect(function(player, towerName, position)
         if data.Player == player then
             local placed = data.Towers:place(towerName, position, data.Coins)
             if placed then
-                RemoteEvent:FireClient(player, "TowerUpdate", PlayerDatas[1].Towers)
-                RemoteEvent:FireClient(player, "CoinUpdate", PlayerDatas[1].Coins)
+                RemoteEvent:FireClient(player, "TowerUpdate", data.Towers)
+                RemoteEvent:FireClient(player, "CoinUpdate", data.Coins)
+            end
+        end
+    end
+end)
+
+ManageTower.Event:Connect(function(player, manageType, towerIndex)
+    for _, data in pairs(PlayerDatas) do
+        if data.Player == player then
+            local towerManager = data.Towers
+            local coinManager = data.Coins
+            local tower = towerManager.Towers[towerIndex]
+            if tower then
+                local towerInfo = require(Towers:FindFirstChild(tower.Name))
+                if manageType == "Sell" then
+                    tower.Model:Destroy()
+                    coinManager.Coins += towerInfo.Stats[1].Cost
+                    table.remove(towerManager.Towers, towerIndex)
+                    RemoteEvent:FireClient(player, "TowerUpdate", data.Towers)
+                end
+                if manageType == "Upgrade" then
+                    if coinManager.Coins >= towerInfo.Stats[tower.Level + 1].Cost then
+                        tower.Level += 1
+                        coinManager.Coins -= towerInfo.Stats[tower.Level + 1].Cost
+                        RemoteEvent:FireClient(player, "TowerUpdate", data.Towers)
+                    end
+                end
+                if manageType == "SwitchTarget" then
+                    if tower.Target == "Closest" then
+                        tower.Target = "Lowest Health"
+                    elseif tower.Target == "Lowest Health" then
+                        tower.Target = "First"
+                    elseif tower.Target == "First" then
+                        tower.Target = "Closest"
+                    end
+                    RemoteEvent:FireClient(player, "TowerUpdate", data.Towers)
+                end
             end
         end
     end
