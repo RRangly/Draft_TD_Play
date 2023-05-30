@@ -40,6 +40,7 @@ end
 function MobManager:startWave()
     self.CurrentWave += 1
     self.Starting = true
+    local difficultyWeight = 1.075^self.CurrentWave * 7
     task.wait(5)
     print("Starting Wave ".. self.CurrentWave)
     for _ = 1, self.CurrentWave * 3, 1 do
