@@ -19,6 +19,7 @@ local MapManager = require(Modules.MapManager)
 local TowerManager = require(Modules.TowerManager)
 local BaseManager = require(Modules.BaseManager)
 local CoinManager = require(Modules.CoinManager)
+local MapGenerator = require(Modules.MapGenerator)
 
 local PlayingPlayers = {}
 local Game = {}
@@ -29,12 +30,12 @@ function Game.runUpdate(playerIndex, deltaTime)
     local mobManager = PlayerDatas[playerIndex].Mobs
     local coinManager = PlayerDatas[playerIndex].Coins
     local player = PlayerDatas[playerIndex].Player
+    local wayPoints = PlayerDatas[playerIndex].Map.WayPoints
     for i, ti in pairs(towerManager.Towers) do
         local tower = require(Towers:FindFirstChild(ti.Name))
         tower.update(player, towerManager, i, mobManager, PlayerDatas[playerIndex].Map.WayPoints, deltaTime)
         --towerManager:towerUpdate(i, PlayerDatas[playerIndex].Mobs, deltaTime)
     end
-    local wayPoints = PlayerDatas[playerIndex].Map.WayPoints
     for i, mob in pairs(mobManager.Mobs) do
         local hum = mob.Object:FindFirstChild("Humanoid")
         if not hum or hum.Health <= 0 then
@@ -143,7 +144,12 @@ Players.PlayerAdded:Connect(function(player)
     until player:HasAppearanceLoaded()
     task.wait(3)
     print("GameStarting")
-    Game.singleTest(player)
+    local map = MapGenerator.generateMap(player)
+    while true do
+        task.wait(0.5)
+        map:genMore(1)
+    end
+    --Game.singleTest(player)
     --[[
     table.insert(PlayingPlayers, player)
     if #PlayingPlayers >= 2 then

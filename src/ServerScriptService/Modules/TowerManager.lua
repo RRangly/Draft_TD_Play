@@ -14,16 +14,22 @@ function TowerManager:playSound(player, soundName)
     local instance = Instance.new("StringValue", folder)
     instance.Name = "PlaySound"
     instance.Value = soundName
-    task.wait(0.2)
-    instance:Destroy()
+    task.spawn(function()
+        task.wait(0.2)
+        instance:Destroy()
+    end)
 end
 
-function TowerManager:playAnimation(player, towerIndex)
+function TowerManager:playAnimation(player, towerIndex, targetPos)
     local folder = ClientLoad:FindFirstChild(player.UserId)
     local instance = Instance.new("IntValue", folder)
     instance.Name = "PlayAnim"
     instance.Value = towerIndex
-    task.wait(0.2)
+    instance:SetAttribute("TargetPos", targetPos)
+    task.spawn(function()
+        task.wait(0.2)
+        instance:Destroy()
+    end)
     instance:Destroy()
 end
 
@@ -32,8 +38,10 @@ function TowerManager:playParticle(player, towerIndex, target)
     local instance = Instance.new("StringValue", folder)
     instance.Name = "PlayParticle"
     instance.Value = towerIndex
-    instance:SetAttribute("Target", target)
-    task.wait(0.2)
+    task.spawn(function()
+        task.wait(0.2)
+        instance:Destroy()
+    end)
     instance:Destroy()
 end
 

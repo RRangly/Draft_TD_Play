@@ -7,4 +7,6 @@ mob.Stats = {
     MaxHealth = 50;
 }
 
+mob.Spawning = {}
+
 return mob

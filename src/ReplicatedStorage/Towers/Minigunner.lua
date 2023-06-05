@@ -1,4 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local Workspace = game:GetService("Workspace")
 
 local ClientLoad = ReplicatedStorage.ClientLoad
 local Animation = ReplicatedStorage.Animations.MinigunShot
@@ -53,18 +55,40 @@ local Minigunner = {
     }
 }
 
-function Minigunner.playAnim(model)
+function Minigunner.playAnim(model, targetPos)
     local animController = model.AnimationController
     local animator = animController.Animator
     local loading = animator:LoadAnimation(Animation)
     loading:Play()
 
-    --[[
     local minigun = model.Minigun
     local barrel = minigun.Barrel
+    local firePoint = barrel.FirePoint
+
     local ori = barrel.Orientation
     barrel.Orientation = Vector3.new(ori.X, ori.Y, ori.Z + 30)
-    ]]
+
+    print("Affecting")
+    local effect = Instance.new("Folder", barrel)
+    local bulletTrail = barrel.BulletTrail:Clone()
+    bulletTrail.Parent = effect
+    local trailPart = Instance.new("Part", effect)
+    trailPart.Size = Vector3.new(1, 1, 1)
+    --trailPart.Transparency = 1
+    trailPart.Anchored = true
+    trailPart.CFrame = CFrame.new(firePoint.Position, targetPos)
+    trailPart.CanCollide = false
+    --trailPart.CanQuery = false
+    local trailStart = Instance.new("Attachment", trailPart)
+    local trailEnd = Instance.new("Attachment", trailPart)
+    trailStart.CFrame = CFrame.new(0, 0, -1.5)
+    bulletTrail.Enabled = true
+    bulletTrail.Attachment0 = trailStart
+    bulletTrail.Attachment1 = trailEnd
+    local tween = TweenService:Create(trailPart, TweenInfo.new(0.1), {Position = targetPos})
+    tween:Play()
+    tween.Completed:Wait()
+    effect:Destroy()
 end
 
 function Minigunner.update(player, towerManager, towerIndex, mobs, waypoints, deltaTime)
@@ -90,9 +114,9 @@ function Minigunner.update(player, towerManager, towerIndex, mobs, waypoints, de
         tower.AttackCD += deltaTime
         if tower.AttackCD >= stats.AttackSpeed then
             tower.AttackCD = 0
-            mobs:TakeDamage(target, stats.Damage)
             towerManager:playSound(player, "MinigunShot")
-            towerManager:playAnimation(player, towerIndex)
+            towerManager:playAnimation(player, towerIndex, mobPart.Position)
+            mobs:TakeDamage(target, stats.Damage)
         end
     else
         tower.AttackCD = 0
