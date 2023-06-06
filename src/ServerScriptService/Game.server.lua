@@ -146,8 +146,8 @@ Players.PlayerAdded:Connect(function(player)
     print("GameStarting")
     local map = MapGenerator.generateMap(player)
     while true do
-        task.wait(0.5)
-        map:genMore(1)
+        task.wait(3)
+        map:generateChunk()
     end
     --Game.singleTest(player)
     --[[
