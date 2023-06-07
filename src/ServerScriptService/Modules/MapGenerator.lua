@@ -20,7 +20,8 @@ function MapGenerator.generateMap(player)
     local map = {
         Chunks = {};
         PathGenDirection = 2;
-        LastChunk = {X = 0; Y = 0;}
+        LastChunk = {X = 0; Y = 0;};
+        WayPoints = {};
     }
     setmetatable(map, MapGenerator)
     map.Chunks[0] = {}
@@ -28,7 +29,7 @@ function MapGenerator.generateMap(player)
         Tiles = {}
     }
     local chunk = map.Chunks[0][0]
-    for x = 0, 8, 1 do
+    for x = 0, 9, 1 do
         chunk.Tiles[x] = {}
         for y = 0, 8, 1 do
             local block = MapAssets.MapPart:Clone()
