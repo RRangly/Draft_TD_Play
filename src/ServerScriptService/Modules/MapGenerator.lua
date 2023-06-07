@@ -49,28 +49,37 @@ function MapGenerator.generateMap(player)
             }
         end
     end
-    --[[
-    for x = 3, 8 do
-        map.Blocks[x] = {}
-        local y = 2
-        local block = MapAssets.MapPart:Clone()
-        block.Parent = Workspace
-        block.Size = Vector3.new(4.9, 1, 4.9)
-        block.Position = Vector3.new(x * 5, 5, y * 5)
-        local coordText = block.CoordGui.CoordText
-        coordText.Text = "( " .. x .. " , " .. y .. " )"
-        coordText.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-        map.LastPath = {X = x; Y = y; Direction = map.PathGenDirection;}
-        table.insert(map.PathToBe, map.LastPath)
-        map.Blocks[x][y] = {
-            Object = block;
-            Placed = false;
-            Path = true;
-        }
-    end
-    ]]
     player.Character:MoveTo(Vector3.new(2.5, 5, 12.5))
     return map
+end
+
+function MapGenerator:floodFill(visited, filledAmount, x, y, trialChunk)
+    if not visited[x] then
+        visited[x] = {}
+    end
+    visited[x][y] = true
+    if filledAmount >= 15 then
+        return false
+    end
+    local neighbours = self:getChunkNeighbours(x, y)
+    for _, info in pairs(neighbours) do
+        if info[1] then
+            continue
+        end
+        if info[2] == trialChunk.X and info[3] == trialChunk.Y then
+            continue
+        end
+        if visited[info[2]] then
+            if visited[info[2]][info[3]] then
+                continue
+            end
+        end
+        local result = self:floodFill(visited, filledAmount + 1, info[2], info[3], trialChunk)
+        if result == false then
+            return false
+        end
+    end
+    return true
 end
 
 function MapGenerator:getBetween(chunk, coord1, coord2)
@@ -94,6 +103,30 @@ function MapGenerator:getBetween(chunk, coord1, coord2)
     end
 
     return {chunk.Tiles[x][y], x, y}
+end
+
+function MapGenerator:getChunkNeighbours(x, y)
+    local chunks = self.Chunks
+    local x1 = chunks[x]
+    local x2 = chunks[x + 1]
+    local x3 = chunks[x - 1]
+    local returnVal = {}
+    if x1 then
+        returnVal[1] = x1[y + 1]
+        returnVal[3] = x1[y - 1]
+    end
+    if x2 then
+        returnVal[2] = x2[y]
+    end
+    if x3 then
+        returnVal[4] = x3[y]
+    end
+    return {
+        {returnVal[1], x, y + 1},
+        {returnVal[2], x + 1, y},
+        {returnVal[3], x, y - 1},
+        {returnVal[4], x - 1, y},
+    }
 end
 
 function MapGenerator:getNeighbours(chunk, x, y)
@@ -134,12 +167,6 @@ function MapGenerator:getSecondNeighbours(chunk, x, y)
     if x3 then
         returnVal[4] = x3[y]
     end
-    print("ReturnVals", {
-        {returnVal[1], x, y + 2},
-        {returnVal[2], x + 2, y},
-        {returnVal[3], x, y - 2},
-        {returnVal[4], x - 2, y},
-    })
     return {
         {returnVal[1], x, y + 2},
         {returnVal[2], x + 2, y},
@@ -149,21 +176,20 @@ function MapGenerator:getSecondNeighbours(chunk, x, y)
 end
 
 function MapGenerator:generatePath(chunk, startCoord, endCoord)
-    print("Coord", "(", startCoord.X, ",", startCoord.Y, ")")
     chunk.Tiles[startCoord.X][startCoord.Y].Visited = true
     if startCoord.X == endCoord.X and startCoord.Y == endCoord.Y then
         chunk.Tiles[startCoord.X][startCoord.Y].Path = true
         return true
     end
     local neighbours = self:getSecondNeighbours(chunk, startCoord.X, startCoord.Y)
-
-    for i, info in pairs(neighbours) do
-        if info[1] == nil or info.Visited then
+    local toDel = {}
+    for i = #neighbours, 1, -1 do
+        local info = neighbours[i]
+        if not info[1] or info[1].Visited then
             table.remove(neighbours, i)
         end
     end
 
-    print("NeighBourList", neighbours)
     while #neighbours > 0 do
         --neighbours = self:getSecondNeighbours(chunk, startCoord.X, startCoord.Y)
         local direction = math.random(1, #neighbours)
@@ -177,9 +203,8 @@ function MapGenerator:generatePath(chunk, startCoord, endCoord)
         else
             table.remove(neighbours, direction)
         end
-        print("NeighbourAmount", #neighbours)
     end
-    chunk.Tiles[startCoord.X][startCoord.Y].Visited = true
+    chunk.Tiles[startCoord.X][startCoord.Y].Visited = false
     return false
 end
 
@@ -212,35 +237,89 @@ function MapGenerator:generateChunk()
             }
         end
     end
-    
+
     local dir
+    local neighbours = self:getChunkNeighbours(chunkPos.X, chunkPos.Y)
+    local formedLoop = false
+
     repeat
-        dir = math.random(1, 4)
-    until dir ~= MapGenerator.oppositeDirection(self.PathGenDirection)
+        repeat
+            dir = math.random(1, 4)
+            local trialChunk = {X = neighbours[dir][2]; Y = neighbours[dir][3];}
+            for _, neighbour in pairs(self:getChunkNeighbours(trialChunk.X, trialChunk.Y)) do
+                if neighbour[1] then
+                    continue
+                end
+                local result = self:floodFill({}, 0, neighbour[2], neighbour[3], trialChunk)
+                if result then
+                    formedLoop = result
+                end
+            end
+        until dir ~= MapGenerator.oppositeDirection(self.PathGenDirection) and not neighbours[dir][1] and not formedLoop
+    until not formedLoop
+
     self.PathGenDirection = dir
     local endCoord
     if self.PathGenDirection == 1 then
         endCoord = {X = 4; Y = 8;}
+        for i = 0, 8, 1 do
+            chunk.Tiles[i][9] = {
+                Path = false;
+                Visited = false;
+            }
+            if i == 4 then
+                chunk.Tiles[i][9].Path = true
+            end
+        end
     elseif self.PathGenDirection == 2 then
         endCoord = {X = 8; Y = 4;}
+        chunk.Tiles[9] = {}
+        for i = 0, 8, 1 do
+            chunk.Tiles[9][i] = {
+                Path = false;
+                Visited = false;
+            }
+            if i == 4 then
+                chunk.Tiles[9][i].Path = true
+            end
+        end
     elseif self.PathGenDirection == 3 then
         endCoord = {X = 4; Y = 0;}
+        for i = 0, 8, 1 do
+            chunk.Tiles[i][-1] = {
+                Path = false;
+                Visited = false;
+            }
+            if i == 4 then
+                chunk.Tiles[i][-1].Path = true
+            end
+        end
     elseif self.PathGenDirection == 4 then
         endCoord = {X = 0; Y = 4;}
+        chunk.Tiles[-1] = {}
+        for i = 0, 8, 1 do
+            chunk.Tiles[-1][i] = {
+                Path = false;
+                Visited = false;
+            }
+            if i == 4 then
+                chunk.Tiles[-1][i].Path = true
+            end
+        end
     end
-    --chunk[startCoord.X][startCoord.Y].Visited = true
-    --table.insert(path, {X = startCoord.X; Y = startCoord.Y;})
     self:generatePath(chunk, startCoord, endCoord)
+
     if not self.Chunks[chunkPos.X] then
         self.Chunks[chunkPos.X] = {}
     end
+
     self.Chunks[chunkPos.X][chunkPos.Y] = {
         Tiles = {}
     }
-    for x = 0, 8, 1 do
+
+    for x, xTile in pairs(chunk.Tiles) do
         self.Chunks[chunkPos.X][chunkPos.Y].Tiles[x] = {}
-        for y = 0, 8, 1 do
-            local tile = chunk.Tiles[x][y]
+        for y, tile in pairs(xTile) do
             local block = MapAssets.MapPart:Clone()
             block.Parent = Workspace
             block.Size = Vector3.new(4.9, 1, 4.9)
@@ -257,141 +336,8 @@ function MapGenerator:generateChunk()
             }
         end
     end
+
     self.LastChunk = chunkPos
 end
 
---[[
-function MapGenerator:genMore(amount)
-    local rn = math.random(1, 100)
-    local tobe = self.PathGenDirection
-    local changing = true
-    if rn >= 85 then
-        if self.PathGenDirection == 4 then
-            tobe = 1
-        else
-            tobe = self.PathGenDirection + 1
-        end
-    elseif rn >= 70 then
-        if self.PathGenDirection == 1 then
-            tobe = 4
-        else
-            tobe = self.PathGenDirection - 1
-        end
-    end
-    local tobeNe1 = self:getNeighbours(self.LastPath.X, self.LastPath.Y)[tobe]
-    local tobeNe = self:getNeighbours(tobeNe1[2], tobeNe1[3])[tobe]
-    if tobeNe1[1] and tobeNe1[1].Path then
-        changing = false
-    end
-    local oppDirection = MapGenerator.oppositeDirection(tobe)
-    for dir, tile in pairs(tobeNe) do
-        if dir == oppDirection then
-            continue
-        end
-        if tile[1] and tile[1].Path then
-            changing = false
-        end
-    end
-    if changing then
-        self.PathGenDirection = tobe
-    else
-        print("DirectionChangeCancelled", tobe, tobeNe1, tobeNe)
-    end
-    for _ = 1, amount, 1 do
-        local prevDirection = self.PathToBe[1].Direction
-        if prevDirection == 2 or prevDirection == 4 then
-            local x = self.PathToBe[1].X
-            for y = self.PathToBe[1].Y - 2, self.PathToBe[1].Y + 2, 1 do
-                if y == self.PathToBe[1].Y or self.Blocks[x][y] then
-                    continue
-                end
-                local block = MapAssets.MapPart:Clone()
-                block.Parent = Workspace
-                block.Size = Vector3.new(4.9, 1, 4.9)
-                block.Position = Vector3.new(x * 5, 5, y * 5)
-                local coordText = block.CoordGui.CoordText
-                coordText.Text = "( " .. x .. " , " .. y .. " )"
-                self.Blocks[x][y] = {
-                    Object = block;
-                    Placed = false;
-                    Path = false;
-                }
-            end
-        elseif prevDirection == 1 or prevDirection == 3 then
-            local y = self.PathToBe[1].Y
-            for x = self.PathToBe[1].X - 2, self.PathToBe[1].X + 2, 1 do
-                if not self.Blocks[x] then
-                    self.Blocks[x] = {}
-                end
-                if x == self.PathToBe[1].X or self.Blocks[x][y] then
-                    continue
-                end
-                local block = MapAssets.MapPart:Clone()
-                block.Parent = Workspace
-                block.Size = Vector3.new(4.9, 1, 4.9)
-                block.Position = Vector3.new(x * 5, 5, y * 5)
-                local coordText = block.CoordGui.CoordText
-                coordText.Text = "( " .. x .. " , " .. y .. " )"
-                self.Blocks[x][y] = {
-                    Object = block;
-                    Placed = false;
-                    Path = false;
-                }
-            end
-        end
-        table.remove(self.PathToBe, 1)
-
-        if self.PathGenDirection == 2 or self.PathGenDirection == 4 then
-            local x = self.LastPath.X
-            if self.PathGenDirection == 2 then
-                x += 1
-            else
-                x -= 1
-            end
-            if not self.Blocks[x] then
-                self.Blocks[x] = {}
-            end
-            local y = self.LastPath.Y
-            local block = MapAssets.MapPart:Clone()
-            block.Parent = Workspace
-            block.Size = Vector3.new(4.9, 1, 4.9)
-            block.Position = Vector3.new(x * 5, 5, y * 5)
-            local coordText = block.CoordGui.CoordText
-            coordText.Text = "( " .. x .. " , " .. y .. " )"
-            coordText.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-            self.LastPath = {X = x; Y = y; Direction = self.PathGenDirection;}
-            self.Blocks[x][y] = {
-                Object = block;
-                Placed = false;
-                Path = true;
-            }
-        elseif self.PathGenDirection == 1 or self.PathGenDirection == 3 then
-            local y = self.LastPath.Y
-            if self.PathGenDirection == 1 then
-                y += 1
-            else
-                y -= 1
-            end
-            if not self.Blocks[y] then
-                self.Blocks[y] = {}
-            end
-            local x = self.LastPath.X
-            local block = MapAssets.MapPart:Clone()
-            block.Parent = Workspace
-            block.Size = Vector3.new(4.9, 1, 4.9)
-            block.Position = Vector3.new(x * 5, 5, y * 5)
-            local coordText = block.CoordGui.CoordText
-            coordText.Text = "( " .. x .. " , " .. y .. " )"
-            coordText.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-            self.LastPath = {X = x; Y = y; Direction = self.PathGenDirection;}
-            self.Blocks[x][y] = {
-                Object = block;
-                Placed = false;
-                Path = true;
-            }
-        end
-        table.insert(self.PathToBe, self.LastPath)
-    end
-end
-]]
 return MapGenerator
