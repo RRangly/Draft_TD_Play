@@ -224,7 +224,7 @@ RunService.RenderStepped:Connect(function()
     end
     if TowerManager.Placing then
         local towerInfo = require(Towers:FindFirstChild(TowerManager.Placing.Tower))
-        if rayCast then
+        if rayCast and rayCast[1].CollisionGroup == "Tiles" then
             if not TowerManager.Placing.Model then
                 print("ModelReplace")
                 local model = TowerModels:FindFirstChild(TowerManager.Placing.Tower):Clone()

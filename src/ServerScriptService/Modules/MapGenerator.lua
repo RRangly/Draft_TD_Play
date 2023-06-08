@@ -3,6 +3,7 @@ local Workspace = game:GetService("Workspace")
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local MapAssets = ReplicatedStorage.MapAssets
+local MapFolder = Workspace.Map
 local MapBlock = ServerScriptService.Modules.MapBlock
 
 local MapGenerator = {}
@@ -29,13 +30,21 @@ function MapGenerator.generateMap(player)
         Tiles = {}
     }
     local chunk = map.Chunks[0][0]
+    local chunkXFolder = Instance.new("Folder" , MapFolder)
+    chunkXFolder.Name = 0
+    local chunkFolder = Instance.new("Folder", chunkXFolder)
+    chunkFolder.Name = 0
     for x = 0, 9, 1 do
         chunk.Tiles[x] = {}
+        local xFolder = Instance.new("Folder", chunkFolder)
+        xFolder.Name = x
         for y = 0, 8, 1 do
             local block = MapAssets.MapPart:Clone()
-            block.Parent = Workspace
+            block.Parent = xFolder
             block.Size = Vector3.new(4.9, 1, 4.9)
             block.Position = Vector3.new(x * 5, 5, y * 5)
+            block.Name = y
+            block.CollisionGroup = "Tiles"
             local coordText = block.CoordGui.CoordText
             coordText.Text = "( " .. x .. " , " .. y .. " )"
             local path = false
@@ -312,7 +321,12 @@ function MapGenerator:generateChunk()
 
     if not self.Chunks[chunkPos.X] then
         self.Chunks[chunkPos.X] = {}
+        Instance.new("Folder" ,MapFolder).Name = chunkPos.X
     end
+
+    local chunkXFolder = MapFolder:FindFirstChild(chunkPos.X)
+    local chunkFolder = Instance.new("Folder", chunkXFolder)
+    chunkFolder.Name = chunkPos.Y
 
     self.Chunks[chunkPos.X][chunkPos.Y] = {
         Tiles = {}
@@ -320,11 +334,16 @@ function MapGenerator:generateChunk()
 
     for x, xTile in pairs(chunk.Tiles) do
         self.Chunks[chunkPos.X][chunkPos.Y].Tiles[x] = {}
+        local xFolder = Instance.new("Folder", chunkFolder)
+        xFolder.Name = x
         for y, tile in pairs(xTile) do
             local block = MapAssets.MapPart:Clone()
             block.Parent = Workspace
             block.Size = Vector3.new(4.9, 1, 4.9)
             block.Position = Vector3.new(chunkPos.X * 50 + x * 5, 5, chunkPos.Y * 50 + y * 5)
+            block.Parent = xFolder
+            block.Name = y
+            block.CollisionGroup = "Tiles"
             local coordText = block.CoordGui.CoordText
             coordText.Text = "( " .. x .. " , " .. y .. " )"
             if tile.Path then
