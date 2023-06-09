@@ -13,6 +13,7 @@ local PlaceTower = ServerStorage.ServerEvents.PlaceTower
 local ManageTower = ServerStorage.ServerEvents.ManageTower
 
 local Modules = ServerScriptService.Modules
+local Data = require(Modules.Data)
 local Draft = require(Modules.Draft)
 local MobManager = require(Modules.MobManager)
 local MapManager = require(Modules.MapManager)
@@ -23,7 +24,7 @@ local MapGenerator = require(Modules.MapGenerator)
 
 local PlayingPlayers = {}
 local Game = {}
-local PlayerDatas = {}
+local PlayerDatas = Data
 
 function Game.runUpdate(playerIndex, deltaTime)
     local towerManager = PlayerDatas[playerIndex].Towers
@@ -34,7 +35,6 @@ function Game.runUpdate(playerIndex, deltaTime)
     for i, ti in pairs(towerManager.Towers) do
         local tower = require(Towers:FindFirstChild(ti.Name))
         tower.update(player, towerManager, i, mobManager, PlayerDatas[playerIndex].Map.WayPoints, deltaTime)
-        --towerManager:towerUpdate(i, PlayerDatas[playerIndex].Mobs, deltaTime)
     end
     for i, mob in pairs(mobManager.Mobs) do
         local hum = mob.Object:FindFirstChild("Humanoid")
@@ -85,7 +85,7 @@ function Game.start(players)
     task.wait(1)
     for i = 1, 2, 1 do
         PlayerDatas[i].Base = BaseManager.new()
-        PlayerDatas[i].Towers:place("Minigunner", Vector3.new(12.5, 5, 40 + ((-1) ^ i) * 100))
+        PlayerDatas[i].Towers:place(i, "Minigunner", Vector3.new(12.5, 5, 40 + ((-1) ^ i) * 100))
     end
     task.wait(1)
     for i = 1, 2, 1 do
@@ -114,7 +114,8 @@ function Game.singleTest(player)
     Draft.singleDraft(player)
     local draft = DraftEnd.Event:Wait()
     PlayerDatas[1].Towers = TowerManager.new(draft)
-    PlayerDatas[1].Map = MapManager.load("Basic", Vector3.new(0, 0, 100))
+    PlayerDatas[1].Map = MapGenerator.generateMap(player)
+    --PlayerDatas[1].Map = MapManager.load("Basic", Vector3.new(0, 0, 100))
     PlayerDatas[1].Base = BaseManager.new()
     PlayerDatas[1].Mobs = MobManager.startGame()
     PlayerDatas[1].Coins = CoinManager.new()
@@ -127,12 +128,19 @@ function Game.singleTest(player)
     PlayerDatas[1].Mobs:startWave()
     RemoteEvent:FireClient(player, "WaveStart", PlayerDatas[1].Mobs.CurrentWave)
 
-    local updateTime = 0
+    local updateTime = {0, 0}
     RunService.Heartbeat:Connect(function(deltaTime)
         Game.runUpdate(1, deltaTime)
-        updateTime += deltaTime
-        if updateTime >= 0.1 then
+        for i in ipairs(updateTime) do
+            updateTime[i] += deltaTime
+        end
+        if updateTime[1] > 0.1 then
             RemoteEvent:FireClient(PlayerDatas[1].Player, "MobUpdate", PlayerDatas[1].Mobs)
+            updateTime[1] = 0
+        end
+        if updateTime[2] > 3 then
+            PlayerDatas[1].Map:generateChunk()
+            updateTime[2] = 0
         end
     end)
 end
@@ -144,12 +152,7 @@ Players.PlayerAdded:Connect(function(player)
     until player:HasAppearanceLoaded()
     task.wait(3)
     print("GameStarting")
-    local map = MapGenerator.generateMap(player)
-    while true do
-        task.wait(3)
-        map:generateChunk()
-    end
-    --Game.singleTest(player)
+    Game.singleTest(player)
     --[[
     table.insert(PlayingPlayers, player)
     if #PlayingPlayers >= 2 then
@@ -159,9 +162,9 @@ Players.PlayerAdded:Connect(function(player)
 end)
 
 PlaceTower.Event:Connect(function(player, towerName, position)
-    for _, data in pairs(PlayerDatas) do
+    for i, data in pairs(PlayerDatas) do
         if data.Player == player then
-            local placed = data.Towers:place(towerName, position, data.Coins)
+            local placed = data.Towers:place(i, towerName, position)
             if placed then
                 RemoteEvent:FireClient(player, "TowerUpdate", data.Towers)
                 RemoteEvent:FireClient(player, "CoinUpdate", data.Coins)
@@ -171,36 +174,11 @@ PlaceTower.Event:Connect(function(player, towerName, position)
 end)
 
 ManageTower.Event:Connect(function(player, manageType, towerIndex)
-    for _, data in pairs(PlayerDatas) do
+    for i, data in pairs(PlayerDatas) do
         if data.Player == player then
-            local towerManager = data.Towers
-            local coinManager = data.Coins
-            local tower = towerManager.Towers[towerIndex]
-            if tower then
-                local towerInfo = require(Towers:FindFirstChild(tower.Name))
-                if manageType == "Sell" then
-                    tower.Model:Destroy()
-                    coinManager.Coins += towerInfo.Stats[1].Cost
-                    table.remove(towerManager.Towers, towerIndex)
-                    RemoteEvent:FireClient(player, "TowerUpdate", data.Towers)
-                end
-                if manageType == "Upgrade" then
-                    if coinManager.Coins >= towerInfo.Stats[tower.Level + 1].Cost then
-                        tower.Level += 1
-                        coinManager.Coins -= towerInfo.Stats[tower.Level + 1].Cost
-                        RemoteEvent:FireClient(player, "TowerUpdate", data.Towers)
-                    end
-                end
-                if manageType == "SwitchTarget" then
-                    if tower.Target == "Closest" then
-                        tower.Target = "Lowest Health"
-                    elseif tower.Target == "Lowest Health" then
-                        tower.Target = "First"
-                    elseif tower.Target == "First" then
-                        tower.Target = "Closest"
-                    end
-                    RemoteEvent:FireClient(player, "TowerUpdate", data.Towers)
-                end
+            local applied = data.Towers:upgrade(i, manageType, towerIndex)
+            if applied then
+                RemoteEvent:FireClient(player, "TowerUpdate", data.Towers)
             end
         end
     end

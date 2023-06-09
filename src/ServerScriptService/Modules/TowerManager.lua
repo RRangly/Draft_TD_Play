@@ -5,6 +5,7 @@ local ClientLoad = ReplicatedStorage.ClientLoad
 local TowerModels = ReplicatedStorage.TowerModels
 local Towers = ReplicatedStorage.Towers
 local WorkSpaceTower = Workspace.Towers
+local Data = require(script.Parent.Data)
 
 local TowerManager = {}
 TowerManager.__index = TowerManager
@@ -142,42 +143,90 @@ function TowerManager:findFirstMob(towerIndex, mobs, waypoints)
     return FirstMob
 end
 
-function TowerManager:checkPlacementAvailable(towerPosition)
+function TowerManager:checkPlacementAvailable(map, towerName, position)
+    local chunkPos = position.Chunk
+    local tilePos = position.Tile
+    local tile = map[chunkPos.X][chunkPos.Y][tilePos.X][tilePos.Y]
+    if tile then
+        local tileType = tile.Type
+        if tileType == "Plain" then
+            return true
+        end
+    end
+    --[[
     local rayCastParam = RaycastParams.new()
     rayCastParam.CollisionGroup = "Towers"
     local origin = Vector3.new(towerPosition.X, towerPosition.Y + 1, towerPosition.Z)
     local ending = Vector3.new(towerPosition.X, towerPosition.Y - 3000, towerPosition.Z)
     return Workspace:Raycast(origin, ending, rayCastParam)
+    ]]
 end
 
-function TowerManager:place(towerName, position, coins)
+function TowerManager:place(playerIndex, towerName, position)
+    local data = Data[playerIndex]
+    local coins = data.Coins
+    local map = data.Map
     local tower = require(Towers:FindFirstChild(towerName))
     local cost = tower.Stats[1].Cost
     if coins.Coins >= cost then
-        local ray = TowerManager:checkPlacementAvailable(position)
-        if ray then
-            local mapType = ray.Instance:GetAttribute("MapType")
-            if mapType == tower.Placement.Type then
-                local clone = TowerModels:FindFirstChild(towerName):Clone()
-                clone.Parent = WorkSpaceTower
-                for _, part in pairs(clone:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.Anchored = true
-                        part.CollisionGroup = "Towers"
-                    end
+        local available = TowerManager:checkPlacementAvailable(map, position)
+        if available then
+            local clone = TowerModels:FindFirstChild(towerName):Clone()
+            clone.Parent = WorkSpaceTower
+            for _, part in pairs(clone:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.Anchored = true
+                    part.CollisionGroup = "Towers"
                 end
-                clone:MoveTo(Vector3.new(position.X, ray.Position.Y, position.Z))
-                coins.Coins -= cost
-                table.insert(self.Towers, {
-                    Name = towerName;
-                    Model = clone;
-                    AttackCD = 0;
-                    PreAttackCD = 0;
-                    Level = 1;
-                    Target = "Closest";
-                })
-            return true
             end
+            local chunkPos = position.Chunk
+            local tilePos = position.Tile
+            clone:MoveTo(Vector3.new(chunkPos.X * 50 + tilePos.X * 5, 5, chunkPos.Y * 50 + tilePos.Y * 5))
+            coins.Coins -= cost
+            table.insert(self.Towers, {
+                Name = towerName;
+                Model = clone;
+                AttackCD = 0;
+                PreAttackCD = 0;
+                Level = 1;
+                Target = "Closest";
+                Position = position
+            })
+            return true
+        end
+    end
+    return false
+end
+
+function TowerManager:upgrade(playerIndex, manageType, towerIndex)
+    local data = Data[playerIndex]
+    local towerManager = data.Towers
+    local coinManager = data.Coins
+    local tower = towerManager.Towers[towerIndex]
+    if tower then
+        local towerInfo = require(Towers:FindFirstChild(tower.Name))
+        if manageType == "Sell" then
+            tower.Model:Destroy()
+            coinManager.Coins += towerInfo.Stats[1].Cost
+            table.remove(towerManager.Towers, towerIndex)
+            return true
+        end
+        if manageType == "Upgrade" then
+            if coinManager.Coins >= towerInfo.Stats[tower.Level + 1].Cost then
+                tower.Level += 1
+                coinManager.Coins -= towerInfo.Stats[tower.Level + 1].Cost
+                return true
+            end
+        end
+        if manageType == "SwitchTarget" then
+            if tower.Target == "Closest" then
+                tower.Target = "Lowest Health"
+            elseif tower.Target == "Lowest Health" then
+                tower.Target = "First"
+            elseif tower.Target == "First" then
+                tower.Target = "Closest"
+            end
+            return true
         end
     end
     return false

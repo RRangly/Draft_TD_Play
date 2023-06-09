@@ -12,6 +12,7 @@ MapGenerator.__index = MapGenerator
 function MapGenerator.oppositeDirection(direction)
     local returnVal = direction + 2
     if returnVal > 4 then
+        
         returnVal -= 4
     end
     return returnVal
@@ -56,6 +57,7 @@ function MapGenerator.generateMap(player)
                 Object = block;
                 Placed = false;
                 Path = path;
+                Type = "Plain";
             }
         end
     end
@@ -63,15 +65,15 @@ function MapGenerator.generateMap(player)
     return map
 end
 
-function MapGenerator:floodFill(visited, filledAmount, x, y, trialChunk)
-    if not visited[x] then
-        visited[x] = {}
+function MapGenerator:floodFill(visited, filledAmount, position, trialChunk)
+    if not visited[position.X] then
+        visited[position.X] = {}
     end
-    visited[x][y] = true
+    visited[position.X][position.Y] = true
     if filledAmount >= 15 then
         return false
     end
-    local neighbours = self:getChunkNeighbours(x, y)
+    local neighbours = self:getChunkNeighbours(position.X, position.Y)
     for _, info in pairs(neighbours) do
         if info[1] then
             continue
@@ -84,7 +86,7 @@ function MapGenerator:floodFill(visited, filledAmount, x, y, trialChunk)
                 continue
             end
         end
-        local result = self:floodFill(visited, filledAmount + 1, info[2], info[3], trialChunk)
+        local result = self:floodFill(visited, filledAmount + 1, Vector2.new(info[2], info[3]), trialChunk)
         if result == false then
             return false
         end
@@ -204,10 +206,10 @@ function MapGenerator:generatePath(chunk, startCoord, endCoord)
         --neighbours = self:getSecondNeighbours(chunk, startCoord.X, startCoord.Y)
         local direction = math.random(1, #neighbours)
         local neighbour = neighbours[direction]
-        local result = self:generatePath(chunk, {X = neighbour[2]; Y = neighbour[3];}, endCoord)
+        local result = self:generatePath(chunk, Vector2.new(neighbour[2], neighbour[3]), endCoord)
         if result then
             chunk.Tiles[startCoord.X][startCoord.Y].Path = true
-            local pathWay = self:getBetween(chunk, startCoord, {X = neighbour[2]; Y = neighbour[3];})
+            local pathWay = self:getBetween(chunk, startCoord, Vector2.new(neighbour[2], neighbour[3]))
             chunk.Tiles[pathWay[2]][pathWay[3]].Path = true
             return true
         else
@@ -222,20 +224,20 @@ function MapGenerator:generateChunk()
     local chunk = {
         Tiles = {}
     }
-    local chunkPos = {}
+    local chunkPos
     local startCoord
     if self.PathGenDirection == 1 then
-        startCoord = {X = 4; Y = 0;}
-        chunkPos = {X = self.LastChunk.X; Y = self.LastChunk.Y + 1}
+        startCoord = Vector2.new(4, 0)
+        chunkPos = Vector2.new(self.LastChunk.X, self.LastChunk.Y + 1)
     elseif self.PathGenDirection == 2 then
-        startCoord = {X = 0; Y = 4;}
-        chunkPos = {X = self.LastChunk.X + 1; Y = self.LastChunk.Y;}
+        startCoord = Vector2.new(0, 4)
+        chunkPos = Vector2.new(self.LastChunk.X + 1, self.LastChunk.Y)
     elseif self.PathGenDirection == 3 then
-        startCoord = {X = 4; Y = 8;}
-        chunkPos = {X = self.LastChunk.X; Y = self.LastChunk.Y - 1}
+        startCoord = Vector2.new(4, 8)
+        chunkPos = Vector2.new(self.LastChunk.X, self.LastChunk.Y - 1)
     elseif self.PathGenDirection == 4 then
-        startCoord = {X = 8; Y = 4;}
-        chunkPos = {X = self.LastChunk.X - 1; Y = self.LastChunk.Y;}
+        startCoord = Vector2.new(8, 4)
+        chunkPos = Vector2.new(self.LastChunk.X - 1, self.LastChunk.Y)
     end
 
     for x = 0, 8, 1 do
@@ -353,6 +355,7 @@ function MapGenerator:generateChunk()
                 Object = block;
                 Placed = false;
                 Path = tile.Path;
+                Type = "Plain";
             }
         end
     end

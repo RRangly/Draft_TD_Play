@@ -1,6 +1,8 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
+local Data = require(script.Parent.Data)
+
 local Mobs = ReplicatedStorage.Mobs
 local MobModels = ReplicatedStorage.MobModels
 local MobFolder = Workspace.Mobs
@@ -68,7 +70,8 @@ function MobManager:TakeDamage(mobIndex, damage)
     end
 end
 
-function MobManager:startMovement(mobIndex, wayPoints)
+function MobManager:startMovement(playerIndex, mobIndex)
+    local wayPoints = Data[playerIndex].Map.WayPoints
     local mob = self.Mobs[mobIndex]
     local moveConnection
     local humanoid = mob.Object.Humanoid
