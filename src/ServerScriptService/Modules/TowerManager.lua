@@ -143,34 +143,36 @@ function TowerManager:findFirstMob(towerIndex, mobs, waypoints)
     return FirstMob
 end
 
-function TowerManager:checkPlacementAvailable(map, towerName, position)
+function TowerManager:checkPlacementAvailable(chunks, towerName, position)
+    local towerInfo = require(Towers:FindFirstChild(towerName))
     local chunkPos = position.Chunk
     local tilePos = position.Tile
-    local tile = map[chunkPos.X][chunkPos.Y][tilePos.X][tilePos.Y]
-    if tile then
-        local tileType = tile.Type
-        if tileType == "Plain" then
-            return true
+    if chunks[chunkPos.X] and chunks[chunkPos.X][chunkPos.Y] then
+        local chunk = chunks[chunkPos.X][chunkPos.Y]
+        local tiles = chunk.Tiles
+        if tiles[tilePos.X] and tiles[tilePos.X][tilePos.Y] then
+            local tile = tiles[tilePos.X][tilePos.Y]
+            if tile.Type == towerInfo.Placement.Type then
+                print("TileDone")
+                return true
+            end
         end
     end
-    --[[
-    local rayCastParam = RaycastParams.new()
-    rayCastParam.CollisionGroup = "Towers"
-    local origin = Vector3.new(towerPosition.X, towerPosition.Y + 1, towerPosition.Z)
-    local ending = Vector3.new(towerPosition.X, towerPosition.Y - 3000, towerPosition.Z)
-    return Workspace:Raycast(origin, ending, rayCastParam)
-    ]]
+    return false
 end
 
 function TowerManager:place(playerIndex, towerName, position)
+    print("Data", Data)
     local data = Data[playerIndex]
     local coins = data.Coins
-    local map = data.Map
+    local chunks = data.Map.Chunks
     local tower = require(Towers:FindFirstChild(towerName))
     local cost = tower.Stats[1].Cost
+    local chunkPos = position.Chunk
+    local tilePos = position.Tile
     if coins.Coins >= cost then
-        local available = TowerManager:checkPlacementAvailable(map, position)
-        if available then
+        local placeable = TowerManager:checkPlacementAvailable(chunks, towerName, position)
+        if placeable then
             local clone = TowerModels:FindFirstChild(towerName):Clone()
             clone.Parent = WorkSpaceTower
             for _, part in pairs(clone:GetDescendants()) do
@@ -179,8 +181,6 @@ function TowerManager:place(playerIndex, towerName, position)
                     part.CollisionGroup = "Towers"
                 end
             end
-            local chunkPos = position.Chunk
-            local tilePos = position.Tile
             clone:MoveTo(Vector3.new(chunkPos.X * 50 + tilePos.X * 5, 5, chunkPos.Y * 50 + tilePos.Y * 5))
             coins.Coins -= cost
             table.insert(self.Towers, {
@@ -192,6 +192,7 @@ function TowerManager:place(playerIndex, towerName, position)
                 Target = "Closest";
                 Position = position
             })
+            print("Placed")
             return true
         end
     end

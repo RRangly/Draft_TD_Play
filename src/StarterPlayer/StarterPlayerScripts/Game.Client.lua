@@ -99,30 +99,6 @@ UserInputService.InputBegan:Connect(function(inputObj, processed)
     end
 end)
 
---[[ 
-local exTime = 0
-local index = 1
-
-RunService.Heartbeat:Connect(function(deltaTime)
-    index += 1
-    exTime += deltaTime
-    if index >= 5 then
-        if Data then
-            if not Data.Towers or not Data.Mobs then
-                return
-            end
-            local towerManager = Data.Towers
-            local mobManager = Data.Mobs
-            for _, tower in pairs(towerManager.Towers) do
-                TowerFXManager.towerUpdate(tower, mobManager, exTime)
-            end
-            exTime = 0
-            index = 1
-        end
-    end
-end)
-]]
-
 RunService.Heartbeat:Connect(function()
     local ClientLoad = ReplicatedStorage.ClientLoad:FindFirstChild(Player.UserId)
     if ClientLoad and Data then

@@ -4,7 +4,6 @@ local ServerScriptService = game:GetService("ServerScriptService")
 
 local MapAssets = ReplicatedStorage.MapAssets
 local MapFolder = Workspace.Map
-local MapBlock = ServerScriptService.Modules.MapBlock
 
 local MapGenerator = {}
 MapGenerator.__index = MapGenerator
@@ -194,7 +193,6 @@ function MapGenerator:generatePath(chunk, startCoord, endCoord)
         return true
     end
     local neighbours = self:getSecondNeighbours(chunk, startCoord.X, startCoord.Y)
-    local toDel = {}
     for i = #neighbours, 1, -1 do
         local info = neighbours[i]
         if not info[1] or info[1].Visited then
@@ -348,14 +346,16 @@ function MapGenerator:generateChunk()
             block.CollisionGroup = "Tiles"
             local coordText = block.CoordGui.CoordText
             coordText.Text = "( " .. x .. " , " .. y .. " )"
+            local tileType = "Plain"
             if tile.Path then
                 coordText.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+                tileType = "Path"
             end
             self.Chunks[chunkPos.X][chunkPos.Y].Tiles[x][y] = {
                 Object = block;
                 Placed = false;
                 Path = tile.Path;
-                Type = "Plain";
+                Type = tileType;
             }
         end
     end

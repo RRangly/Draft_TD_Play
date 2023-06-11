@@ -14,6 +14,7 @@ local PlayerGuis = ReplicatedStorage.PlayerGuis
 local PlayerGuiAssets = ReplicatedStorage.PlayerGuiAssets
 local ClientAssets = ReplicatedStorage.ClientAssets
 
+local Data = require(script.Parent.Data)
 local Camera = Workspace.CurrentCamera
 local Player = Players.LocalPlayer
 local PlayerGui = Player.PlayerGui
@@ -126,17 +127,23 @@ function TowerManager.mouseRayCast(collisionGroup)
     end
 end
 
-function TowerManager.checkPlacementAvailable(towerType, towerPosition)
-    local rayCastParam = RaycastParams.new()
-    rayCastParam.CollisionGroup = "Towers"
-    local origin = Vector3.new(towerPosition.X, towerPosition.Y + 1, towerPosition.Z)
-    local ending = Vector3.new(towerPosition.X, towerPosition.Y - 3000, towerPosition.Z)
-    local ray = Workspace:Raycast(origin, ending, rayCastParam)
-    local mapType
-    if ray then
-        mapType = ray.Instance:GetAttribute("MapType")
-        if mapType == towerType then
-            return ray
+function TowerManager.getTileCoord(block)
+    local pos = block.Position
+    local chunk = Vector2.new(math.floor(pos.X / 50), math.floor(pos.Y / 50))
+    local tile = Vector2.new(math.floor((pos.X - chunk.X * 50) / 5), math.floor((pos.Y - chunk.Y * 50) / 5))
+    return chunk, tile
+end
+
+function TowerManager.checkPlacementAvailable(towerType, chunkPos, tilePos)
+    local chunks = Data.Map.Chunks
+    if chunks[chunkPos.X] and chunks[chunkPos.X][chunkPos.Y] then
+        local chunk = chunks[chunkPos.X][chunkPos.Y]
+        local tiles = chunk.Tiles
+        if tiles[tilePos.X] and tiles[tilePos.X][tilePos.Y] then
+            local tile = tiles[tilePos.X][tilePos.Y]
+            if tile.Type == towerType then
+                return true
+            end
         end
     end
     return false
@@ -150,22 +157,27 @@ function TowerManager.startPlacement(tower)
 end
 
 function TowerManager.placeTower(coins)
+    local map = Data.Map
     local placing = TowerManager.Placing
     local rayCast = TowerManager.RayCast
+
     if not rayCast then
         return
     end
     local towerInfo = require(Towers:FindFirstChild(TowerManager.Placing.Tower))
-    local placeable = TowerManager.checkPlacementAvailable(towerInfo.Placement.Type, rayCast.Position)
-    if not placeable or coins < towerInfo.Stats[1].Cost then
-        print("CantPlace")
-        return
+    local chunkPos, tilePos = TowerManager.getTileCoord(rayCast.Part)
+    local available = TowerManager.checkPlacementAvailable(towerInfo.Placement.Type, chunkPos, tilePos)
+    if available then
+        if placing.Model then
+            placing.Model:Destroy()
+        end
+        if coins >= towerInfo.Stats[1].Cost then
+            TowerManager.Placing = nil
+            RemoteEvent:FireServer("PlaceTower", placing.Tower, {Chunk = chunkPos; Tile = tilePos;})
+        else
+            print("Too expensive")
+        end
     end
-    if placing.Model then
-        placing.Model:Destroy()
-    end
-    TowerManager.Placing = nil
-    RemoteEvent:FireServer("PlaceTower", placing.Tower, rayCast.Position)
 end
 
 function TowerManager.cancelPlacement()
@@ -239,14 +251,9 @@ RunService.RenderStepped:Connect(function()
                     end
                 end
             end
-            placeable = TowerManager.checkPlacementAvailable(towerInfo.Placement.Type, rayCast[2])
-            local pos = TowerManager.RayCast.Position
-            local yUpper = TowerManager.Placing.Model:GetExtentsSize().Y / 2
-            if placeable then
-                TowerManager.Placing.Model:MoveTo(Vector3.new(pos.X, placeable.Position.Y + yUpper, pos.Z))
-            else
-                TowerManager.Placing.Model:MoveTo(Vector3.new(pos.X, pos.Y + yUpper, pos.Z))
-            end
+            local chunkPos, tilePos = TowerManager.getTileCoord(rayCast.Part)
+            placeable = TowerManager.checkPlacementAvailable(towerInfo.Placement.Type, chunkPos, tilePos)
+            TowerManager.Placing.Model:MoveTo(Vector3.new(chunkPos.X * 50 + tilePos.X * 5, 5, chunkPos.Y * 50 + tilePos.Y * 5))
             local model = TowerManager.Placing.Model
             for _, part in pairs(model:GetDescendants()) do
                 if part:IsA("BasePart") then
