@@ -107,11 +107,9 @@ function Draft.singleDraft(player)
         end
 
         table.insert(playerPickedCards, playerCards[currentSet][pickNum])
-        print("Draftselect", currentSet)
-        
+
         currentSet += 1
         if currentSet > (numCards / 2) then
-            print("DraftEnded")
             DraftEnd:Fire(playerPickedCards)
         end
     end)

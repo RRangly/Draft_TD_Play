@@ -34,6 +34,9 @@
         },
         "CoinUpdate": {
           "$className": "BindableEvent"
+        },
+        "MapUpdate": {
+          "$className": "BindableEvent"
         }
       },
       "Towers": {

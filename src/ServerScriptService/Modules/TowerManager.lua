@@ -153,7 +153,6 @@ function TowerManager:checkPlacementAvailable(chunks, towerName, position)
         if tiles[tilePos.X] and tiles[tilePos.X][tilePos.Y] then
             local tile = tiles[tilePos.X][tilePos.Y]
             if tile.Type == towerInfo.Placement.Type then
-                print("TileDone")
                 return true
             end
         end
@@ -162,7 +161,6 @@ function TowerManager:checkPlacementAvailable(chunks, towerName, position)
 end
 
 function TowerManager:place(playerIndex, towerName, position)
-    print("Data", Data)
     local data = Data[playerIndex]
     local coins = data.Coins
     local chunks = data.Map.Chunks
@@ -192,7 +190,6 @@ function TowerManager:place(playerIndex, towerName, position)
                 Target = "Closest";
                 Position = position
             })
-            print("Placed")
             return true
         end
     end

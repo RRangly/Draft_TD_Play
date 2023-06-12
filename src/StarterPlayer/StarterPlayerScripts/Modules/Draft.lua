@@ -23,7 +23,6 @@ local function updateDraftGui(frames, cards)
 end
 
 function Draft.draftBegin(draftCards)
-    print("DraftCards", draftCards)
     local draftGui = PlayerGuis.DraftGui:Clone()
     draftGui.Parent = PlayerGui
     local currentPick = 1
@@ -35,32 +34,24 @@ function Draft.draftBegin(draftCards)
 
     pick1.InputBegan:Connect(function(inputObj)
         if inputObj.UserInputType == Enum.UserInputType.MouseButton1 then
-            print("pick", 1)
             RemoteEvent:FireServer("DraftSelect", 1)
-            print("Current", currentPick, "Total", #draftCards)
             if currentPick >= #draftCards then
-                print("end")
                 endDraft(draftGui)
                 return
             end
             currentPick += 1
-            print("NextPick", draftCards[currentPick][1], draftCards[currentPick][2])
             updateDraftGui(picks, draftCards[currentPick])
         end
     end)
 
     pick2.InputBegan:Connect(function(inputObj)
         if inputObj.UserInputType == Enum.UserInputType.MouseButton1 then
-            print("pick", 2)
             RemoteEvent:FireServer("DraftSelect", 2)
-            print("Current", currentPick, "Total", #draftCards)
             if currentPick >= #draftCards then
-                print("end")
                 endDraft(draftGui)
                 return
             end
             currentPick += 1
-            print("NextPick", draftCards[currentPick][1], draftCards[currentPick][2])
             updateDraftGui(picks, draftCards[currentPick])
         end
     end)

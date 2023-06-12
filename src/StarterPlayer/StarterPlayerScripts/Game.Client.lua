@@ -28,35 +28,34 @@ local BaseHpUpdate = ClientEvents.BaseHpUpdate
 local WaveReady = ClientEvents.WaveReady
 local WaveStart = ClientEvents.WaveStart
 local CoinsUpdate = ClientEvents.CoinUpdate
+local MapUpdate = ClientEvents.MapUpdate
 
 TowerUpdate.Event:Connect(function(towers)
-    Data.Towers = towers
+    Data.Data.Towers = towers
     HudManager.TowerManager.updateSelection(Data.Coins, towers.Towers, HudManager.TowerManager.Selected.Index)
 end)
 
 CardsUpdate.Event:Connect(function(cards)
-    Data.Cards = cards
+    Data.Data.Cards = cards
     HudManager.TowerManager.updateCards()
 end)
 
-print("DraftBeginReady")
 DraftBegin.Event:Connect(function(cards)
-    print("BeginDraft")
     Draft.draftBegin(cards)
 end)
 
 MobUpdate.Event:Connect(function(mobs)
-    Data.Mobs = mobs
+    Data.Data.Mobs = mobs
     MobHealthDisplay.update(mobs.Mobs)
 end)
 
 BaseHpUpdate.Event:Connect(function(base)
-    Data.Base = base
+    Data.Data.Base = base
     HudManager.BaseManager.updateBaseHp(base)
 end)
 
 GameStarted.Event:Once(function(data)
-    Data = data
+    Data.Data = data
     HudManager.start()
     HudManager.TowerManager.updateCards(data.Towers.Cards)
     HudManager.BaseManager.updateBaseHp(data.Base)
@@ -73,8 +72,13 @@ WaveStart.Event:Connect(function(wave)
 end)
 
 CoinsUpdate.Event:Connect(function(coins)
-    Data.Coins = coins
+    Data.Data.Coins = coins
     HudManager.CoinManager.updateCoins(coins)
+end)
+
+MapUpdate.Event:Connect(function(map)
+    print(map)
+    Data.Data.Map = map
 end)
 
 UserInputService.InputBegan:Connect(function(inputObj, processed)
@@ -87,9 +91,9 @@ UserInputService.InputBegan:Connect(function(inputObj, processed)
         local placing = HudManager.TowerManager.Placing
         if inputObj.UserInputType == Enum.UserInputType.MouseButton1 then
             if placing then
-                HudManager.TowerManager.placeTower(Data.Coins.Coins)
+                HudManager.TowerManager.placeTower(Data.Data.Coins.Coins)
             elseif Data.Towers then
-                HudManager.TowerManager.selectTower(Data.Coins, Data.Towers.Towers)
+                HudManager.TowerManager.selectTower(Data.Data.Coins, Data.Data.Towers.Towers)
             end
         elseif inputObj.KeyCode == Enum.KeyCode.F then
             if placing then

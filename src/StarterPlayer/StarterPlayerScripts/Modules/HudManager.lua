@@ -29,7 +29,6 @@ function TowerManager.statChange(textLabel, index, statName, present, upgrade)
     textLabel.TextSize = 28
     textLabel.TextXAlignment = Enum.TextXAlignment.Left
     textLabel.Position = UDim2.new(0, 10, index * 0.1, 10)
-    --textLabel = Instance.new("TextLabel")
     textLabel.Font = Enum.Font.SourceSans
     textLabel.Text = statName .. ": " .. present .. " -> " .. upgrade
 end
@@ -129,20 +128,24 @@ end
 
 function TowerManager.getTileCoord(block)
     local pos = block.Position
-    local chunk = Vector2.new(math.floor(pos.X / 50), math.floor(pos.Y / 50))
-    local tile = Vector2.new(math.floor((pos.X - chunk.X * 50) / 5), math.floor((pos.Y - chunk.Y * 50) / 5))
+    local chunk = Vector2.new(math.floor(pos.X / 50), math.floor(pos.Z / 50))
+    local tile = Vector2.new(math.floor((pos.X - chunk.X * 50) / 5), math.floor((pos.Z - chunk.Y * 50) / 5))
     return chunk, tile
 end
 
 function TowerManager.checkPlacementAvailable(towerType, chunkPos, tilePos)
-    local chunks = Data.Map.Chunks
+    local chunks = Data.Data.Map.Chunks
+    print("Chunks", chunks)
     if chunks[chunkPos.X] and chunks[chunkPos.X][chunkPos.Y] then
         local chunk = chunks[chunkPos.X][chunkPos.Y]
         local tiles = chunk.Tiles
+        print("ChunkDone")
         if tiles[tilePos.X] and tiles[tilePos.X][tilePos.Y] then
             local tile = tiles[tilePos.X][tilePos.Y]
             if tile.Type == towerType then
                 return true
+            else
+                print("Type", tile.Type, towerType)
             end
         end
     end
@@ -157,7 +160,7 @@ function TowerManager.startPlacement(tower)
 end
 
 function TowerManager.placeTower(coins)
-    local map = Data.Map
+    local map = Data.Data.Map
     local placing = TowerManager.Placing
     local rayCast = TowerManager.RayCast
 
@@ -245,14 +248,16 @@ RunService.RenderStepped:Connect(function()
                 for _, part in pairs(model:GetDescendants()) do
                     if part:IsA("BasePart") then
                         part.CollisionGroup = "Towers"
+                        part.Anchored = true
                         part.CanTouch = false
                         part.CanQuery = false
                         part.Material = Enum.Material.ForceField
                     end
                 end
             end
-            local chunkPos, tilePos = TowerManager.getTileCoord(rayCast.Part)
+            local chunkPos, tilePos = TowerManager.getTileCoord(rayCast[1])
             placeable = TowerManager.checkPlacementAvailable(towerInfo.Placement.Type, chunkPos, tilePos)
+            print("Placement", placeable, Vector3.new(chunkPos.X * 50 + tilePos.X * 5, 5, chunkPos.Y * 50 + tilePos.Y * 5))
             TowerManager.Placing.Model:MoveTo(Vector3.new(chunkPos.X * 50 + tilePos.X * 5, 5, chunkPos.Y * 50 + tilePos.Y * 5))
             local model = TowerManager.Placing.Model
             for _, part in pairs(model:GetDescendants()) do

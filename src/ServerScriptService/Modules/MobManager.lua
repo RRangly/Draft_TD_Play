@@ -39,7 +39,7 @@ function MobManager:Spawn(mobName)
     table.insert(self.Mobs, mobData)
 end
 
-function MobManager:startWave()
+function MobManager:startWave(playerIndex)
     self.CurrentWave += 1
     self.Starting = true
     local difficultyWeight = 1.075^self.CurrentWave * 7
@@ -71,7 +71,7 @@ function MobManager:TakeDamage(mobIndex, damage)
 end
 
 function MobManager:startMovement(playerIndex, mobIndex)
-    local wayPoints = Data[playerIndex].Map.WayPoints
+    local wayPoints = table.clone(Data[playerIndex].Map.WayPoints)
     local mob = self.Mobs[mobIndex]
     local moveConnection
     local humanoid = mob.Object.Humanoid
@@ -115,7 +115,6 @@ function MobManager.startGame()
         PreSpawn = {};
         CurrentMoving = {};
         Starting = true;
-        Waypoint = 1;
     }
     setmetatable(mobs, MobManager)
     return mobs

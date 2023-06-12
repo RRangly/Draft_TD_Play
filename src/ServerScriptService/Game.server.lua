@@ -26,14 +26,16 @@ local PlayingPlayers = {}
 local Game = {}
 
 function Game.runUpdate(playerIndex, deltaTime)
-    local towerManager = Data[playerIndex].Towers
-    local mobManager = Data[playerIndex].Mobs
-    local coinManager = Data[playerIndex].Coins
-    local player = Data[playerIndex].Player
-    local wayPoints = Data[playerIndex].Map.WayPoints
+    local data = Data[playerIndex]
+    local towerManager = data.Towers
+    local mobManager = data.Mobs
+    local coinManager = data.Coins
+    local player = data.Player
+    local mapManager = data.Map
+    --local wayPoints = data.Map.WayPoints
     for i, ti in pairs(towerManager.Towers) do
         local tower = require(Towers:FindFirstChild(ti.Name))
-        tower.update(player, towerManager, i, mobManager, Data[playerIndex].Map.WayPoints, deltaTime)
+        tower.update(player, towerManager, i, mobManager, data.Map.WayPoints, deltaTime)
     end
     for i, mob in pairs(mobManager.Mobs) do
         local hum = mob.Object:FindFirstChild("Humanoid")
@@ -51,18 +53,20 @@ function Game.runUpdate(playerIndex, deltaTime)
         end
         if needAddition then
             task.spawn(function()
-                local healthReduction = mobManager:startMovement(i, wayPoints)
+                local healthReduction = mobManager:startMovement(playerIndex, i)
                 if healthReduction > 0 then
-                    Data[playerIndex].Base.Health -= healthReduction
-                    RemoteEvent:FireClient(player, "BaseHpUpdate", Data[playerIndex].Base)
+                    data.Base.Health -= healthReduction
+                    RemoteEvent:FireClient(player, "BaseHpUpdate", data.Base)
                 end
             end)
         end
     end
     if #mobManager.Mobs < 1 and #mobManager.PreSpawn < 1 and not mobManager.Starting then
-        RemoteEvent:FireClient(player, "WaveReady", Data[1].Mobs.CurrentWave + 1)
+        RemoteEvent:FireClient(player, "WaveReady", data.Mobs.CurrentWave + 1)
+        mapManager:generateChunk()
+        RemoteEvent:FireClient(player, "MapUpdate", data.Map)
         mobManager:startWave()
-        RemoteEvent:FireClient(player, "WaveStart", Data[1].Mobs.CurrentWave)
+        RemoteEvent:FireClient(player, "WaveStart", data.Mobs.CurrentWave)
     end
 end
 
@@ -114,7 +118,7 @@ function Game.singleTest(player)
     local draft = DraftEnd.Event:Wait()
     Data[1].Towers = TowerManager.new(draft)
     Data[1].Map = MapGenerator.generateMap(player)
-    Data[1].Map = MapManager.load("Basic", Vector3.new(0, 0, 100))
+    Data[1].Map:generateChunk()
     Data[1].Base = BaseManager.new()
     Data[1].Mobs = MobManager.startGame()
     Data[1].Coins = CoinManager.new()
@@ -126,20 +130,14 @@ function Game.singleTest(player)
     RemoteEvent:FireClient(player, "WaveReady", Data[1].Mobs.CurrentWave + 1)
     Data[1].Mobs:startWave()
     RemoteEvent:FireClient(player, "WaveStart", Data[1].Mobs.CurrentWave)
-    
-    local updateTime = {0, 0}
+    print("DataMap", Data[1].Map)
+    local updateTime = 0
     RunService.Heartbeat:Connect(function(deltaTime)
         Game.runUpdate(1, deltaTime)
-        for i in ipairs(updateTime) do
-            updateTime[i] += deltaTime
-        end
-        if updateTime[1] > 0.1 then
+        updateTime += deltaTime
+        if updateTime > 0.1 then
             RemoteEvent:FireClient(Data[1].Player, "MobUpdate", Data[1].Mobs)
-            updateTime[1] = 0
-        end
-        if updateTime[2] > 3 then
-            Data[1].Map:generateChunk()
-            updateTime[2] = 0
+            updateTime = 0
         end
     end)
 end

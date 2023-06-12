@@ -51,6 +51,7 @@ function MapGenerator.generateMap(player)
             if y == 4 then
                 coordText.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
                 path = true
+                table.insert(map.WayPoints, 1, Vector3.new(x * 5, 10, y * 5))
             end
             chunk.Tiles[x][y] = {
                 Object = block;
@@ -190,6 +191,7 @@ function MapGenerator:generatePath(chunk, startCoord, endCoord)
     chunk.Tiles[startCoord.X][startCoord.Y].Visited = true
     if startCoord.X == endCoord.X and startCoord.Y == endCoord.Y then
         chunk.Tiles[startCoord.X][startCoord.Y].Path = true
+        table.insert(chunk.Path, 1, startCoord)
         return true
     end
     local neighbours = self:getSecondNeighbours(chunk, startCoord.X, startCoord.Y)
@@ -209,6 +211,7 @@ function MapGenerator:generatePath(chunk, startCoord, endCoord)
             chunk.Tiles[startCoord.X][startCoord.Y].Path = true
             local pathWay = self:getBetween(chunk, startCoord, Vector2.new(neighbour[2], neighbour[3]))
             chunk.Tiles[pathWay[2]][pathWay[3]].Path = true
+            table.insert(chunk.Path, 1, startCoord)
             return true
         else
             table.remove(neighbours, direction)
@@ -220,7 +223,8 @@ end
 
 function MapGenerator:generateChunk()
     local chunk = {
-        Tiles = {}
+        Tiles = {};
+        Path = {};
     }
     local chunkPos
     local startCoord
@@ -260,7 +264,7 @@ function MapGenerator:generateChunk()
                 if neighbour[1] then
                     continue
                 end
-                local result = self:floodFill({}, 0, neighbour[2], neighbour[3], trialChunk)
+                local result = self:floodFill({}, 0, Vector2.new(neighbour[2], neighbour[3]), trialChunk)
                 if result then
                     formedLoop = result
                 end
@@ -277,10 +281,9 @@ function MapGenerator:generateChunk()
                 Path = false;
                 Visited = false;
             }
-            if i == 4 then
-                chunk.Tiles[i][9].Path = true
-            end
         end
+        chunk.Tiles[4][9].Path = true
+        table.insert(chunk.Path, 1, Vector2.new(4, 9))
     elseif self.PathGenDirection == 2 then
         endCoord = {X = 8; Y = 4;}
         chunk.Tiles[9] = {}
@@ -289,10 +292,9 @@ function MapGenerator:generateChunk()
                 Path = false;
                 Visited = false;
             }
-            if i == 4 then
-                chunk.Tiles[9][i].Path = true
-            end
         end
+        chunk.Tiles[9][4].Path = true
+        table.insert(chunk.Path, 1, Vector2.new(9, 4))
     elseif self.PathGenDirection == 3 then
         endCoord = {X = 4; Y = 0;}
         for i = 0, 8, 1 do
@@ -300,10 +302,9 @@ function MapGenerator:generateChunk()
                 Path = false;
                 Visited = false;
             }
-            if i == 4 then
-                chunk.Tiles[i][-1].Path = true
-            end
         end
+        chunk.Tiles[4][-1].Path = true
+        table.insert(chunk.Path, 1, Vector2.new(4, -1))
     elseif self.PathGenDirection == 4 then
         endCoord = {X = 0; Y = 4;}
         chunk.Tiles[-1] = {}
@@ -312,10 +313,9 @@ function MapGenerator:generateChunk()
                 Path = false;
                 Visited = false;
             }
-            if i == 4 then
-                chunk.Tiles[-1][i].Path = true
-            end
         end
+        chunk.Tiles[-1][4].Path = true
+        table.insert(chunk.Path, 1, Vector2.new(-1, 4))
     end
     self:generatePath(chunk, startCoord, endCoord)
 
@@ -332,6 +332,9 @@ function MapGenerator:generateChunk()
         Tiles = {}
     }
 
+    for _, coord in pairs(chunk.Path) do
+        table.insert(self.WayPoints, 1, Vector3.new(chunkPos.X * 50 + coord.X * 5, 10, chunkPos.Y * 50 + coord.Y * 5))
+    end
     for x, xTile in pairs(chunk.Tiles) do
         self.Chunks[chunkPos.X][chunkPos.Y].Tiles[x] = {}
         local xFolder = Instance.new("Folder", chunkFolder)
