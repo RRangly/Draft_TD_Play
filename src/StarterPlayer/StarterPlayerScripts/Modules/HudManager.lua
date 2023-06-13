@@ -65,7 +65,8 @@ function TowerManager.updateSelection(coins, towers, towerIndex)
     local origin = Vector3.new(towerPosition.X, towerPosition.Y + 1, towerPosition.Z)
     local ending = Vector3.new(towerPosition.X, towerPosition.Y - 3000, towerPosition.Z)
     local ray = Workspace:Raycast(origin, ending, rayCastParam)
-    TowerManager.Selected.RangeDisplay.Position = ray.Position
+    local displayPos = Vector3.new(ray.Position.X, ray.Position.Y + 0.1, ray.Position.Z)
+    TowerManager.Selected.RangeDisplay.Position = displayPos
     local tween = TweenService:Create(TowerManager.Selected.RangeDisplay, TweenInfo.new(0.5), {Size = Vector3.new(0.2, presentStats.AttackRange * 2, presentStats.AttackRange * 2)})
     tween:Play()
 
@@ -133,21 +134,13 @@ function TowerManager.getTileCoord(block)
     return chunk, tile
 end
 
-function TowerManager.checkPlacementAvailable(towerType, chunkPos, tilePos)
+function TowerManager.checkPlacementAvailable(towerType, block)
     local chunks = Data.Data.Map.Chunks
-    print("Chunks", chunks)
-    if chunks[chunkPos.X] and chunks[chunkPos.X][chunkPos.Y] then
-        local chunk = chunks[chunkPos.X][chunkPos.Y]
-        local tiles = chunk.Tiles
-        print("ChunkDone")
-        if tiles[tilePos.X] and tiles[tilePos.X][tilePos.Y] then
-            local tile = tiles[tilePos.X][tilePos.Y]
-            if tile.Type == towerType then
-                return true
-            else
-                print("Type", tile.Type, towerType)
-            end
-        end
+    local tileType = block:GetAttribute("Type")
+    if tileType == towerType then
+        return true
+    else
+        print("Type", tileType, towerType)
     end
     return false
 end
@@ -169,7 +162,7 @@ function TowerManager.placeTower(coins)
     end
     local towerInfo = require(Towers:FindFirstChild(TowerManager.Placing.Tower))
     local chunkPos, tilePos = TowerManager.getTileCoord(rayCast.Part)
-    local available = TowerManager.checkPlacementAvailable(towerInfo.Placement.Type, chunkPos, tilePos)
+    local available = TowerManager.checkPlacementAvailable(towerInfo.Placement.Type, rayCast.Part)
     if available then
         if placing.Model then
             placing.Model:Destroy()
@@ -256,8 +249,8 @@ RunService.RenderStepped:Connect(function()
                 end
             end
             local chunkPos, tilePos = TowerManager.getTileCoord(rayCast[1])
-            placeable = TowerManager.checkPlacementAvailable(towerInfo.Placement.Type, chunkPos, tilePos)
-            print("Placement", placeable, Vector3.new(chunkPos.X * 50 + tilePos.X * 5, 5, chunkPos.Y * 50 + tilePos.Y * 5))
+            placeable = TowerManager.checkPlacementAvailable(towerInfo.Placement.Type, rayCast[1])
+            --print("Placement", placeable, Vector3.new(chunkPos.X * 50 + tilePos.X * 5, 5, chunkPos.Y * 50 + tilePos.Y * 5), "ChunkPos", chunkPos, "TilePos", tilePos)
             TowerManager.Placing.Model:MoveTo(Vector3.new(chunkPos.X * 50 + tilePos.X * 5, 5, chunkPos.Y * 50 + tilePos.Y * 5))
             local model = TowerManager.Placing.Model
             for _, part in pairs(model:GetDescendants()) do

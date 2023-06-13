@@ -171,7 +171,7 @@ function TowerManager:place(playerIndex, towerName, position)
     if coins.Coins >= cost then
         local placeable = TowerManager:checkPlacementAvailable(chunks, towerName, position)
         if placeable then
-            local clone = TowerModels:FindFirstChild(towerName):Clone()
+            local clone = TowerModels:FindFirstChild(towerName):Clone() 
             clone.Parent = WorkSpaceTower
             for _, part in pairs(clone:GetDescendants()) do
                 if part:IsA("BasePart") then

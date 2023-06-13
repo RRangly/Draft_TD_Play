@@ -39,9 +39,9 @@ function MapGenerator.generateMap(player)
         local xFolder = Instance.new("Folder", chunkFolder)
         xFolder.Name = x
         for y = 0, 8, 1 do
+            local tileType = "Plain"
             local block = MapAssets.MapPart:Clone()
             block.Parent = xFolder
-            block.Size = Vector3.new(4.9, 1, 4.9)
             block.Position = Vector3.new(x * 5, 5, y * 5)
             block.Name = y
             block.CollisionGroup = "Tiles"
@@ -52,7 +52,9 @@ function MapGenerator.generateMap(player)
                 coordText.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
                 path = true
                 table.insert(map.WayPoints, 1, Vector3.new(x * 5, 10, y * 5))
+                tileType = "Path"
             end
+            block:SetAttribute("Type", tileType)
             chunk.Tiles[x][y] = {
                 Object = block;
                 Placed = false;
@@ -342,7 +344,6 @@ function MapGenerator:generateChunk()
         for y, tile in pairs(xTile) do
             local block = MapAssets.MapPart:Clone()
             block.Parent = Workspace
-            block.Size = Vector3.new(4.9, 1, 4.9)
             block.Position = Vector3.new(chunkPos.X * 50 + x * 5, 5, chunkPos.Y * 50 + y * 5)
             block.Parent = xFolder
             block.Name = y
@@ -354,6 +355,7 @@ function MapGenerator:generateChunk()
                 coordText.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
                 tileType = "Path"
             end
+            block:SetAttribute("Type", tileType)
             self.Chunks[chunkPos.X][chunkPos.Y].Tiles[x][y] = {
                 Object = block;
                 Placed = false;

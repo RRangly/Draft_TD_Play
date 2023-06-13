@@ -64,7 +64,6 @@ function Game.runUpdate(playerIndex, deltaTime)
     if #mobManager.Mobs < 1 and #mobManager.PreSpawn < 1 and not mobManager.Starting then
         RemoteEvent:FireClient(player, "WaveReady", data.Mobs.CurrentWave + 1)
         mapManager:generateChunk()
-        RemoteEvent:FireClient(player, "MapUpdate", data.Map)
         mobManager:startWave()
         RemoteEvent:FireClient(player, "WaveStart", data.Mobs.CurrentWave)
     end
