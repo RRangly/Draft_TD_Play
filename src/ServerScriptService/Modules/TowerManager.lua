@@ -162,12 +162,22 @@ end
 
 function TowerManager:place(playerIndex, towerName, position)
     local data = Data[playerIndex]
+    local cards = self.Cards
     local coins = data.Coins
     local chunks = data.Map.Chunks
     local tower = require(Towers:FindFirstChild(towerName))
     local cost = tower.Stats[1].Cost
     local chunkPos = position.Chunk
     local tilePos = position.Tile
+    local hasCard = false
+    for _, cardName in pairs(cards) do
+        if cardName == cards then
+            hasCard = true
+        end
+    end
+    if not hasCard then
+        return
+    end
     if coins.Coins >= cost then
         local placeable = TowerManager:checkPlacementAvailable(chunks, towerName, position)
         if placeable then

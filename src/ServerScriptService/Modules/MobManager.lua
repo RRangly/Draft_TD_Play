@@ -10,9 +10,8 @@ local MobFolder = Workspace.Mobs
 local MobManager = {}
 MobManager.__index = MobManager
 
-function MobManager:Spawn(mobName)
-    local mobInfo = require(Mobs:FindFirstChild(mobName))
-    local model = MobModels:FindFirstChild(mobName)
+function MobManager:Spawn(mobInfo)
+    local model = MobModels:FindFirstChild("Zombie")
 
     local clone = model:Clone()
     local humanoid = clone.Humanoid
@@ -31,29 +30,86 @@ function MobManager:Spawn(mobName)
 
     local mobData = {
         Object = clone;
-        MobName = mobName;
-        MaxHealth = mobInfo.Stats.MaxHealth;
-        Health = mobInfo.Stats.MaxHealth;
+        MobName = "Zombie";
+        MaxHealth = mobInfo.MaxHealth;
+        Health = mobInfo.MaxHealth;
     }
     setmetatable(mobData, MobManager)
     table.insert(self.Mobs, mobData)
 end
 
-function MobManager:startWave(playerIndex)
+function MobManager.generateDefaultMob(weight)
+    local mob = {
+        MaxHealth = weight * 2;
+        WalkSpeed = math.floor((math.log(weight, 1.095) + 5)^(1/7)*6);
+    }
+    return mob
+end
+
+
+function MobManager.generateSpeedMob(weight)
+    local mob = {
+        MaxHealth = math.ceil(weight * 1.5);
+        WalkSpeed = math.floor((math.log(weight, 1.095) + 5)^(1/3)*8);
+    }
+    return mob
+end
+
+function MobManager.generateTankMob(weight)
+    local mob = {
+        MaxHealth = math.ceil(weight * 4.5);
+        WalkSpeed = math.floor((math.log(weight, 1.095) + 5)^(1/8)*4);
+    }
+    return mob
+end
+
+function MobManager:startWave()
     self.CurrentWave += 1
     self.Starting = true
-    local difficultyWeight = 1.075^self.CurrentWave * 7
+    local difficultyWeight = 1.095^self.CurrentWave * 100
+    local waveType = math.random(1, 10)
+    local mobsDistribution
+    local totalMob
+    if waveType < 3 then
+        totalMob = math.floor(difficultyWeight / math.random(41, 46))
+        mobsDistribution = {
+            Default = math.ceil(totalMob * 0.2);
+            Tank = math.ceil(totalMob * 0.55);
+            Speed = math.ceil(totalMob * 0.1);
+            Special = math.ceil(totalMob * 0.15);
+        }
+    elseif waveType < 5 then
+        totalMob = math.floor(difficultyWeight / math.random(26, 33))
+        mobsDistribution = {
+            Default = math.ceil(totalMob * 0.2);
+            Tank = math.ceil(totalMob * 0.15);
+            Speed = math.ceil(totalMob * 0.5);
+            Special = math.ceil(totalMob * 0.15);
+        }
+    else
+        totalMob = math.floor(difficultyWeight / math.random(22, 28))
+        mobsDistribution = {
+            Default = math.ceil(totalMob * 0.6);
+            Tank = math.ceil(totalMob * 0.15);
+            Speed = math.ceil(totalMob * 0.1);
+            Special = math.ceil(totalMob * 0.15);
+        }
+    end
+    local mobWeight = math.floor(difficultyWeight / 35)
+    for mobType, mobAmount in pairs(mobsDistribution) do
+        for _ = 1, #mobAmount, 1 do
+            local mob = self["generate"..mobType.."Mob"](mobWeight)
+            table.insert(self.PreSpawn, math.random(1, #self.PreSpawn), mob)
+        end
+    end
     task.wait(5)
     print("Starting Wave ".. self.CurrentWave)
-    for _ = 1, self.CurrentWave * 3, 1 do
-        table.insert(self.PreSpawn, "Zombie")
-    end
     self.Starting = false
     coroutine.wrap(
         function()
             for _ = 1, #self.PreSpawn, 1 do
-                local mobName = self.PreSpawn[1]
-                self:Spawn(mobName)
+                local mob = self.PreSpawn[1]
+                self:Spawn(mob)
                 table.remove(self.PreSpawn, 1)
                 task.wait(0.25)
             end
