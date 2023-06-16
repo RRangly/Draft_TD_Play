@@ -85,7 +85,8 @@ UserInputService.InputBegan:Connect(function(inputObj)
         HudManager.TowerManager.cancelPlacement()
     end
     local mouseLocation = UserInputService:GetMouseLocation()
-    local frames = PlayerGui:GetGuiObjectsAtPosition(mouseLocation.X, mouseLocation.Y)
+    local frames = PlayerGui:GetGuiObjectsAtPosition(mouseLocation.X, mouseLocation.Y - 36)
+    print("Frames", frames)
     if #frames == 0 then
         if inputObj.UserInputType == Enum.UserInputType.MouseButton1 then
             if placing then

@@ -171,7 +171,7 @@ function TowerManager:place(playerIndex, towerName, position)
     local tilePos = position.Tile
     local hasCard = false
     for _, cardName in pairs(cards) do
-        if cardName == cards then
+        if cardName == towerName then
             hasCard = true
         end
     end
@@ -186,6 +186,9 @@ function TowerManager:place(playerIndex, towerName, position)
             for _, part in pairs(clone:GetDescendants()) do
                 if part:IsA("BasePart") then
                     part.Anchored = true
+                    part.CanCollide = true
+                    part.CanTouch = false
+                    part.CanQuery = false
                     part.CollisionGroup = "Towers"
                 end
             end

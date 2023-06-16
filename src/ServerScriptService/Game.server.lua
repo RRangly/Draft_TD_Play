@@ -29,20 +29,18 @@ function Game.runUpdate(playerIndex, deltaTime)
     local data = Data[playerIndex]
     local towerManager = data.Towers
     local mobManager = data.Mobs
-    local coinManager = data.Coins
     local player = data.Player
     local mapManager = data.Map
     --local wayPoints = data.Map.WayPoints
     for i, ti in pairs(towerManager.Towers) do
         local tower = require(Towers:FindFirstChild(ti.Name))
-        tower.update(player, towerManager, i, mobManager, data.Map.WayPoints, deltaTime)
+        --tower.update(player, towerManager, i, mobManager, data.Map.WayPoints, deltaTime)
+        tower.update(data, i, deltaTime)
     end
     for i, mob in pairs(mobManager.Mobs) do
         local hum = mob.Object:FindFirstChild("Humanoid")
         if not hum or hum.Health <= 0 then
             table.remove(mobManager.Mobs, i)
-            coinManager.Coins += 10
-            RemoteEvent:FireClient(player, "CoinUpdate", Data[1].Coins)
             continue
         end
         local needAddition = true
@@ -135,7 +133,8 @@ function Game.singleTest(player)
         Game.runUpdate(1, deltaTime)
         updateTime += deltaTime
         if updateTime > 0.1 then
-            RemoteEvent:FireClient(Data[1].Player, "MobUpdate", Data[1].Mobs)
+            RemoteEvent:FireClient(player, "MobUpdate", Data[1].Mobs)
+            RemoteEvent:FireClient(player, "CoinUpdate", Data[1].Coins)
             updateTime = 0
         end
     end)

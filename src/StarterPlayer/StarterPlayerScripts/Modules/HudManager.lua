@@ -242,6 +242,7 @@ RunService.RenderStepped:Connect(function()
                     if part:IsA("BasePart") then
                         part.CollisionGroup = "Towers"
                         part.Anchored = true
+                        part.CanCollide = true
                         part.CanTouch = false
                         part.CanQuery = false
                         part.Material = Enum.Material.ForceField
@@ -250,7 +251,6 @@ RunService.RenderStepped:Connect(function()
             end
             local chunkPos, tilePos = TowerManager.getTileCoord(rayCast[1])
             placeable = TowerManager.checkPlacementAvailable(towerInfo.Placement.Type, rayCast[1])
-            --print("Placement", placeable, Vector3.new(chunkPos.X * 50 + tilePos.X * 5, 5, chunkPos.Y * 50 + tilePos.Y * 5), "ChunkPos", chunkPos, "TilePos", tilePos)
             TowerManager.Placing.Model:MoveTo(Vector3.new(chunkPos.X * 50 + tilePos.X * 5, 5, chunkPos.Y * 50 + tilePos.Y * 5))
             local model = TowerManager.Placing.Model
             for _, part in pairs(model:GetDescendants()) do
@@ -312,8 +312,8 @@ end
 local CoinManager = {}
 
 function CoinManager.updateCoins(coins)
-    local audio = SoundFX.Money_Gain
-    audio:Play()
+    --local audio = SoundFX.Money_Gain
+    --audio:Play()
     local coinText = CurrentGui.CoinText
     coinText.Text = "Coins " .. coins.Coins
 end

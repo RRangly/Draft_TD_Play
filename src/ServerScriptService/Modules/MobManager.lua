@@ -16,9 +16,9 @@ function MobManager:Spawn(mobInfo)
     local clone = model:Clone()
     local humanoid = clone.Humanoid
 
-    humanoid.WalkSpeed = mobInfo.Stats.WalkSpeed
-    humanoid.MaxHealth = mobInfo.Stats.MaxHealth
-    humanoid.Health = mobInfo.Stats.MaxHealth
+    humanoid.WalkSpeed = mobInfo.WalkSpeed
+    humanoid.MaxHealth = mobInfo.MaxHealth
+    humanoid.Health = mobInfo.MaxHealth
 
     clone.Parent = MobFolder
     for _, part in pairs(clone:GetDescendants()) do
@@ -63,6 +63,21 @@ function MobManager.generateTankMob(weight)
     return mob
 end
 
+function MobManager.generateSpecialMob(weight)
+    local mob = {
+        MaxHealth = math.ceil(weight * 2.5);
+        WalkSpeed = math.floor((math.log(weight, 1.095) + 5)^(1/7)*6);
+    }
+    return mob
+end
+
+local GenerationFunctions = {
+    Default = MobManager.generateDefaultMob;
+    Speed = MobManager.generateSpeedMob;
+    Tank = MobManager.generateTankMob;
+    Special = MobManager.generateSpecialMob;
+}
+
 function MobManager:startWave()
     self.CurrentWave += 1
     self.Starting = true
@@ -97,9 +112,9 @@ function MobManager:startWave()
     end
     local mobWeight = math.floor(difficultyWeight / 35)
     for mobType, mobAmount in pairs(mobsDistribution) do
-        for _ = 1, #mobAmount, 1 do
-            local mob = self["generate"..mobType.."Mob"](mobWeight)
-            table.insert(self.PreSpawn, math.random(1, #self.PreSpawn), mob)
+        for _ = 1, mobAmount, 1 do
+            local mob = GenerationFunctions[mobType](mobWeight)
+            table.insert(self.PreSpawn, math.random(1, #self.PreSpawn + 1), mob)
         end
     end
     task.wait(5)
@@ -117,10 +132,12 @@ function MobManager:startWave()
     )()
 end
 
-function MobManager:TakeDamage(mobIndex, damage)
+function MobManager:TakeDamage(coinManager, mobIndex, damage)
     local mob = self.Mobs[mobIndex]
     local humanoid = mob.Object.Humanoid
+    local prevHealth = humanoid.Health
     humanoid:TakeDamage(damage)
+    coinManager.Coins += (prevHealth - humanoid.Health)
     if humanoid.Health <= 0 then
         mob.Object:Destroy()
     end
