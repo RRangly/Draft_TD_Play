@@ -102,7 +102,6 @@ function TowerManager:findLowestHealth(towerIndex, mobs)
         if not mobPart then continue end
         local mobVector = Vector3.new(mobPart.Position.X, 0, mobPart.Position.Z)
         local humanoid = mob.Object.Humanoid
-
         local mobHealth = humanoid.Health
         local mobDistance = (mobVector - towerVector).Magnitude
         if mobDistance < range and mobHealth < lowestHealth then
