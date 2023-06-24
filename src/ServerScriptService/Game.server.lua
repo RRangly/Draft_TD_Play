@@ -33,6 +33,7 @@ function Game.runUpdate(playerIndex, deltaTime)
     local mapManager = data.Map
     --local wayPoints = data.Map.WayPoints
     for i, ti in pairs(towerManager.Towers) do
+        print("TowerName", ti.Name)
         local tower = require(Towers:FindFirstChild(ti.Name))
         --tower.update(player, towerManager, i, mobManager, data.Map.WayPoints, deltaTime)
         tower.update(data, i, deltaTime)

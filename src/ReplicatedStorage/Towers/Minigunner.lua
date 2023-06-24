@@ -129,5 +129,4 @@ function Minigunner.update(data, towerIndex, deltaTime)
     end
 end
 
-
 return Minigunner

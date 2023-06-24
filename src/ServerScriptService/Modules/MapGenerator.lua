@@ -5,6 +5,8 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local MapAssets = ReplicatedStorage.MapAssets
 local MapFolder = Workspace.Map
 
+local MapSeed = 0.281
+
 local MapGenerator = {}
 MapGenerator.__index = MapGenerator
 
@@ -189,6 +191,10 @@ function MapGenerator:getSecondNeighbours(chunk, x, y)
     }
 end
 
+function MapGenerator:getHeight(chunkPos: Vector2, tilePos: Vector2)
+    return math.round(((1 + math.noise(chunkPos.X * 10 + tilePos.X, chunkPos.Y * 10 + tilePos.Y, MapSeed)) / 2) - 0.1)
+end
+
 function MapGenerator:generatePath(chunk, startCoord, endCoord)
     chunk.Tiles[startCoord.X][startCoord.Y].Visited = true
     if startCoord.X == endCoord.X and startCoord.Y == endCoord.Y then
@@ -342,15 +348,24 @@ function MapGenerator:generateChunk()
         local xFolder = Instance.new("Folder", chunkFolder)
         xFolder.Name = x
         for y, tile in pairs(xTile) do
+            local tileHeight = 0
+            if not tile.Path then
+                tileHeight = self:getHeight(chunkPos, Vector2.new(x, y))
+                tile.Height = tileHeight
+            end
             local block = MapAssets.MapPart:Clone()
             block.Parent = Workspace
-            block.Position = Vector3.new(chunkPos.X * 50 + x * 5, 5, chunkPos.Y * 50 + y * 5)
+            block.Position = Vector3.new(chunkPos.X * 50 + x * 5, 5 + (tileHeight * 1.5), chunkPos.Y * 50 + y * 5)
+            block.Size = Vector3.new(5, tileHeight * 3 + 1, 5)
             block.Parent = xFolder
             block.Name = y
             block.CollisionGroup = "Tiles"
             local coordText = block.CoordGui.CoordText
             coordText.Text = "( " .. x .. " , " .. y .. " )"
             local tileType = "Plain"
+            if tileHeight > 0 then
+                tileType = "Cliff"
+            end
             if tile.Path then
                 coordText.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
                 tileType = "Path"

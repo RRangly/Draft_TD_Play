@@ -186,16 +186,15 @@ end
 
 function TowerManager.selectTower(coins, towers)
     local rayCast = TowerManager.mouseRayCast("EveryThing")
-    if not rayCast then
-        return
-    end
-    for i, tower in pairs(towers) do
-        local model = rayCast[1]:IsDescendantOf(tower.Model)
-        if model then
-            TowerManager.Selected.Index = i;
-            print("Selected", TowerManager.Selected)
-            TowerManager.updateSelection(coins, towers, i)
-            return TowerManager.Selected
+    if rayCast then
+        for i, tower in pairs(towers) do
+            local model = rayCast[1]:IsDescendantOf(tower.Model)
+            if model then
+                TowerManager.Selected.Index = i;
+                print("Selected", TowerManager.Selected)
+                TowerManager.updateSelection(coins, towers, i)
+                return TowerManager.Selected
+            end
         end
     end
     TowerManager.updateSelection(coins, towers, nil)
