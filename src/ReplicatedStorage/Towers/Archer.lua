@@ -22,7 +22,7 @@ local Archer = {
         },
         {
             LevelName = "Improved Archery";
-            AttackSpeed = 0.5;
+            AttackSpeed = 0.4;
             AttackRange = 36;
             Damage = 4;
             ArrowSpeed = 40;
