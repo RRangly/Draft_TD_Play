@@ -87,8 +87,9 @@ function Draft.singleDraft(player)
         towerCards[i], towerCards[j] = towerCards[j], towerCards[i]
     end
 
-    local numCards = 4
+    local numCards = 6
     local playerCards = {
+        {},
         {},
         {},
     }
@@ -105,9 +106,7 @@ function Draft.singleDraft(player)
         if eventPlayer ~= player then
             return
         end
-
         table.insert(playerPickedCards, playerCards[currentSet][pickNum])
-
         currentSet += 1
         if currentSet > (numCards / 2) then
             DraftEnd:Fire(playerPickedCards)

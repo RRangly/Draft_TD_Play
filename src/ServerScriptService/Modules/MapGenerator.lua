@@ -373,7 +373,7 @@ function MapGenerator:generateChunk()
             block:SetAttribute("Type", tileType)
             self.Chunks[chunkPos.X][chunkPos.Y].Tiles[x][y] = {
                 Object = block;
-                Placed = false;
+                Occupied = false;
                 Path = tile.Path;
                 Type = tileType;
             }

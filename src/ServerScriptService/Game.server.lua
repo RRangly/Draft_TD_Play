@@ -34,7 +34,6 @@ function Game.runUpdate(playerIndex, deltaTime)
     local mapManager = data.Map
     --local wayPoints = data.Map.WayPoints
     for i, ti in pairs(towerManager.Towers) do
-        print("TowerName", ti.Name)
         local tower = require(Towers:FindFirstChild(ti.Name))
         --tower.update(player, towerManager, i, mobManager, data.Map.WayPoints, deltaTime)
         tower.update(data, i, deltaTime)
@@ -61,12 +60,16 @@ function Game.runUpdate(playerIndex, deltaTime)
             end)
         end
     end
+    --[[
     if #mobManager.Mobs < 1 and #mobManager.PreSpawn < 1 and not mobManager.Starting then
         RemoteEvent:FireClient(player, "WaveReady", data.Mobs.CurrentWave + 1)
-        mapManager:generateChunk()
+        if (data.Mobs.CurrentWave + 1) % 5 == 0 then
+            mapManager:generateChunk()
+        end
         mobManager:startWave()
         RemoteEvent:FireClient(player, "WaveStart", data.Mobs.CurrentWave)
     end
+    ]]
 end
 
 function Game.start(players)
@@ -124,10 +127,9 @@ function Game.singleTest(player)
     local fol = Instance.new("Folder", ClientLoad)
     fol.Name = player.UserId
     task.wait(1)
-    Data[1].Towers:place(1, "Minigunner", {Chunk = Vector2.new(0, 0); Tile = Vector2.new(8, 3)})
+    --Data[1].Towers:place(1, "Minigunner", {Chunk = Vector2.new(0, 0); Tile = Vector2.new(8, 3)})
     RemoteEvent:FireClient(player, "GameStarted", Data[1])
     RemoteEvent:FireClient(player, "WaveReady", Data[1].Mobs.CurrentWave + 1)
-    Data[1].Mobs:startWave()
     RemoteEvent:FireClient(player, "WaveStart", Data[1].Mobs.CurrentWave)
     print("DataMap", Data[1].Map)
     local updateTime = 0
@@ -140,6 +142,15 @@ function Game.singleTest(player)
             updateTime = 0
         end
     end)
+    while true do
+        RemoteEvent:FireClient(player, "WaveReady", Data[1].Mobs.CurrentWave + 1)
+        if (Data[1].Mobs.CurrentWave + 1) % 5 == 0 then
+            Data[1].Map:generateChunk()
+        end
+        task.wait(5)
+        RemoteEvent:FireClient(player, "WaveStart", Data[1].Mobs.CurrentWave)
+        Data[1].Mobs:startWave()
+    end
 end
 
 Players.PlayerAdded:Connect(function(player)

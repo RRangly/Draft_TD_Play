@@ -78,7 +78,7 @@ local GenerationFunctions = {
     Special = MobManager.generateSpecialMob;
 }
 
-function MobManager:startWave()
+function MobManager:startWave(mapManager)
     self.CurrentWave += 1
     self.Starting = true
     local difficultyWeight = 1.095^self.CurrentWave * 100
@@ -117,19 +117,14 @@ function MobManager:startWave()
             table.insert(self.PreSpawn, math.random(1, #self.PreSpawn + 1), mob)
         end
     end
-    task.wait(5)
     print("Starting Wave ".. self.CurrentWave)
     self.Starting = false
-    coroutine.wrap(
-        function()
-            for _ = 1, #self.PreSpawn, 1 do
-                local mob = self.PreSpawn[1]
-                self:Spawn(mob)
-                table.remove(self.PreSpawn, 1)
-                task.wait(0.25)
-            end
-        end
-    )()
+    for _ = 1, #self.PreSpawn, 1 do
+        local mob = self.PreSpawn[1]
+        self:Spawn(mob)
+        table.remove(self.PreSpawn, 1)
+        task.wait(0.25)
+    end
 end
 
 function MobManager:TakeDamage(coinManager, mobIndex, damage)

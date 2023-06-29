@@ -131,7 +131,7 @@ function TowerManager:findFirstMob(towerIndex, mobs, waypoints)
                 local waypoint = waypoints[mob.Waypoint - 1]
                 local waypointVector = Vector3.new(waypoint.X, 0, waypoint.Z)
                 local waypointDistance = (mobVector - waypointVector).Magnitude
-                if waypointDistance > FirstDistance then
+                if mob.Waypoint > FirstWaypoint or waypointDistance >= FirstDistance then
                     FirstMob = i
                     FirstDistance = waypointDistance
                     FirstWaypoint = mob.Waypoint
@@ -151,8 +151,8 @@ function TowerManager:checkPlacementAvailable(chunks, towerName, position)
         local tiles = chunk.Tiles
         if tiles[tilePos.X] and tiles[tilePos.X][tilePos.Y] then
             local tile = tiles[tilePos.X][tilePos.Y]
-            if tile.Type == towerInfo.Placement.Type then
-                return true
+            if tile.Type == towerInfo.Placement.Type and not tile.Occupied then
+                return tile
             end
         end
     end
@@ -178,8 +178,9 @@ function TowerManager:place(playerIndex, towerName, position)
         return
     end
     if coins.Coins >= cost then
-        local placeable = TowerManager:checkPlacementAvailable(chunks, towerName, position)
-        if placeable then
+        local placeTile = TowerManager:checkPlacementAvailable(chunks, towerName, position)
+        if placeTile then
+            placeTile.Occupied = true
             local clone = TowerModels:FindFirstChild(towerName):Clone() 
             clone.Parent = WorkSpaceTower
             for _, part in pairs(clone:GetDescendants()) do
@@ -199,7 +200,7 @@ function TowerManager:place(playerIndex, towerName, position)
                 AttackCD = 0;
                 PreAttackCD = 0;
                 Level = 1;
-                Target = "Closest";
+                Target = "First";
                 Position = position
             })
             return true
