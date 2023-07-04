@@ -49,9 +49,7 @@ CardsUpdate.Event:Connect(function(cards)
     HudManager.TowerManager.updateCards()
 end)
 
-DraftBegin.Event:Connect(function(cards)
-    Draft.draftBegin(cards)
-end)
+DraftBegin.Event:Connect(Draft.draftBegin)
 
 MobUpdate.Event:Connect(function(mobs)
     Data.Data.Mobs = mobs

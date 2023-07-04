@@ -1,37 +1,37 @@
-local Gunner = {
-    Name = "Gunner";
+local Soldier = {
+    Name = "Soldier";
     Stats = {
         {
             LevelName = "Basic";
-            AttackSpeed = 1;
+            AttackSpeed = 0.5;
+            AttackRange = 20;
+            Damage = 2;
+            Cost = 150;
+        },
+        {
+            LevelName = "Faster Reload";
+            AttackSpeed = 0.4;
             AttackRange = 20;
             Damage = 2;
             Cost = 80;
         },
         {
-            LevelName = "Faster Reload";
-            AttackSpeed = 0.7;
-            AttackRange = 20;
-            Damage = 2;
-            Cost = 120;
-        },
-        {
             LevelName = "Better Bullets";
-            AttackSpeed = 0.6;
+            AttackSpeed = 04;
             AttackRange = 24;
             Damage = 3;
             Cost = 250;
         },
         {
             LevelName = "Glock 17";
-            AttackSpeed = 0.6;
+            AttackSpeed = 0.4;
             AttackRange = 30;
             Damage = 5;
             Cost = 500;
         },
         {
             LevelName = "Trained Gunner";
-            AttackSpeed = 0.4;
+            AttackSpeed = 0.3;
             AttackRange = 45;
             Damage = 5;
             Cost = 900;
@@ -44,13 +44,13 @@ local Gunner = {
 }
 
 
-function Gunner.update(data, towerIndex, deltaTime)
+function Soldier.update(data, towerIndex, deltaTime)
     local towerManager = data.Towers
     local mobManager = data.Mobs
     local waypoints = data.Map.WayPoints
     local clientLoad = data.ClientLoad
     local tower = towerManager.Towers[towerIndex]
-    local stats = Gunner.Stats[tower.Level]
+    local stats = Soldier.Stats[tower.Level]
     if towerManager:attackAvailable(towerIndex, mobManager.Mobs) then
         local target
         if tower.Target == "Closest" then
@@ -75,4 +75,4 @@ function Gunner.update(data, towerIndex, deltaTime)
     end
 end
 
-return Gunner
+return Soldier

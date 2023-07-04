@@ -6,7 +6,6 @@ local ServerStorage = game:GetService("ServerStorage")
 local Workspace = game:GetService("Workspace")
 
 local Towers = ReplicatedStorage.Towers
-local ClientLoad = ReplicatedStorage.ClientLoad
 
 local RemoteEvent = ReplicatedStorage.ServerCommunication
 local DraftEnd = ServerStorage.ServerEvents.DraftEnd
@@ -22,6 +21,8 @@ local TowerManager = require(Modules.TowerManager)
 local BaseManager = require(Modules.BaseManager)
 local CoinManager = require(Modules.CoinManager)
 local MapGenerator = require(Modules.MapGenerator)
+local WaveManager = require(Modules.WaveManager)
+local ClientLoad = require(Modules.ClientLoad)
 
 local PlayingPlayers = {}
 local Game = {}
@@ -31,8 +32,6 @@ function Game.runUpdate(playerIndex, deltaTime)
     local towerManager = data.Towers
     local mobManager = data.Mobs
     local player = data.Player
-    local mapManager = data.Map
-    --local wayPoints = data.Map.WayPoints
     for i, ti in pairs(towerManager.Towers) do
         local tower = require(Towers:FindFirstChild(ti.Name))
         --tower.update(player, towerManager, i, mobManager, data.Map.WayPoints, deltaTime)
@@ -60,16 +59,6 @@ function Game.runUpdate(playerIndex, deltaTime)
             end)
         end
     end
-    --[[
-    if #mobManager.Mobs < 1 and #mobManager.PreSpawn < 1 and not mobManager.Starting then
-        RemoteEvent:FireClient(player, "WaveReady", data.Mobs.CurrentWave + 1)
-        if (data.Mobs.CurrentWave + 1) % 5 == 0 then
-            mapManager:generateChunk()
-        end
-        mobManager:startWave()
-        RemoteEvent:FireClient(player, "WaveStart", data.Mobs.CurrentWave)
-    end
-    ]]
 end
 
 function Game.start(players)
@@ -116,22 +105,21 @@ end
 function Game.singleTest(player)
     Data[1] = {}
     Data[1].Player = player
-    Draft.singleDraft(player)
+    Draft.megadraft({player})
     local draft = DraftEnd.Event:Wait()
-    Data[1].Towers = TowerManager.new(draft)
+    Data[1].Towers = TowerManager.new(draft[1])
     Data[1].Map = MapGenerator.generateMap(player)
     Data[1].Map:generateChunk()
     Data[1].Base = BaseManager.new()
-    Data[1].Mobs = MobManager.startGame()
+    Data[1].Mobs = MobManager.new()
     Data[1].Coins = CoinManager.new()
-    local fol = Instance.new("Folder", ClientLoad)
-    fol.Name = player.UserId
-    task.wait(1)
-    --Data[1].Towers:place(1, "Minigunner", {Chunk = Vector2.new(0, 0); Tile = Vector2.new(8, 3)})
+    Data[1].WaveManager = WaveManager.startGame()
+    Data[1].ClientLoad = ClientLoad.new(player)
+    task.wait(5)
+    player.Character:MoveTo(Vector3.new(25, 5, 25))
     RemoteEvent:FireClient(player, "GameStarted", Data[1])
     RemoteEvent:FireClient(player, "WaveReady", Data[1].Mobs.CurrentWave + 1)
     RemoteEvent:FireClient(player, "WaveStart", Data[1].Mobs.CurrentWave)
-    print("DataMap", Data[1].Map)
     local updateTime = 0
     RunService.Heartbeat:Connect(function(deltaTime)
         Game.runUpdate(1, deltaTime)
@@ -144,12 +132,12 @@ function Game.singleTest(player)
     end)
     while true do
         RemoteEvent:FireClient(player, "WaveReady", Data[1].Mobs.CurrentWave + 1)
-        if (Data[1].Mobs.CurrentWave + 1) % 5 == 0 then
+        if (Data[1].WaveManager.CurrentWave + 1) % 5 == 0 then
             Data[1].Map:generateChunk()
         end
         task.wait(5)
-        RemoteEvent:FireClient(player, "WaveStart", Data[1].Mobs.CurrentWave)
-        Data[1].Mobs:startWave()
+        RemoteEvent:FireClient(player, "WaveStart", Data[1].WaveManager.CurrentWave)
+        Data[1].WaveManager:startWave(Data[1].Mobs)
     end
 end
 
@@ -161,12 +149,6 @@ Players.PlayerAdded:Connect(function(player)
     task.wait(3)
     print("GameStarting")
     Game.singleTest(player)
-    --[[
-    table.insert(PlayingPlayers, player)
-    if #PlayingPlayers >= 2 then
-        Game.start({PlayingPlayers[1], PlayingPlayers[2]})
-    end
-    ]]
 end)
 
 PlaceTower.Event:Connect(function(player, towerName, position)

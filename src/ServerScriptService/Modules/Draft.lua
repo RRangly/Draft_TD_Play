@@ -114,4 +114,59 @@ function Draft.singleDraft(player)
     end)
 end
 
+function Draft.megadraft(players)
+    local cards = {}
+
+    for i, module in pairs(Towers:GetChildren()) do
+        cards[i] = module.Name
+    end
+
+    for i = #cards, 2, -1 do
+        local j = math.random(i)
+        cards[i], cards[j] = cards[j], cards[i]
+    end
+    local draftInfo = {
+        Cards = {};
+        Picks = {};
+        Turn = 1;
+        Total = 0;
+    }
+    for i = 1, 8, 1 do
+        table.insert(draftInfo.Cards, cards[i])
+    end
+    for i = 1, #players, 1 do
+        draftInfo.Picks[i] = {}
+        RemoteEvent:FireClient(players[i], "DraftBegin", draftInfo.Cards, i)
+    end
+    DraftSelect.Event:Connect(function(player, pickNum)
+        local playerNum = nil
+        for i = 1, #players, 1 do
+            if player == players[i] then
+                playerNum = i
+            end
+        end
+        if not (playerNum == draftInfo.Turn) then
+            return
+        end
+        if draftInfo.Cards[pickNum] then
+            table.insert(draftInfo.Picks[playerNum], draftInfo.Cards[pickNum])
+            draftInfo.Cards[pickNum] = nil
+            draftInfo.Turn += 1
+            if draftInfo.Turn > #players then
+                draftInfo.Turn = 1
+            end
+            for i = 1, #players, 1 do
+                RemoteEvent:FireClient(players[i], "DraftUpdate", "Pick", playerNum, pickNum, draftInfo.Turn)
+            end
+            draftInfo.Total += 1
+            if draftInfo.Total >= 4 then
+                for i = 1, #players, 1 do
+                    RemoteEvent:FireClient(players[i], "DraftUpdate", "End")
+                end
+                DraftEnd:Fire(draftInfo.Picks)
+            end
+        end
+    end)
+end
+
 return Draft

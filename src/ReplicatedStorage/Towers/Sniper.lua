@@ -60,7 +60,7 @@ function Sniper.update(data, towerIndex, deltaTime)
     local towerManager = data.Towers
     local mobManager = data.Mobs
     local waypoints = data.Map.WayPoints
-    local player = data.Player
+    local clientLoad = data.ClientLoad
     local tower = towerManager.Towers[towerIndex]
     local stats = Sniper.Stats[tower.Level]
     if towerManager:attackAvailable(towerIndex, mobManager.Mobs) then
@@ -78,7 +78,7 @@ function Sniper.update(data, towerIndex, deltaTime)
         tower.AttackCD += deltaTime
         if tower.AttackCD >= stats.AttackSpeed then
             tower.AttackCD = 0
-            towerManager:playSound(player, "GunShot")
+            clientLoad:playSound("GunShot")
             mobManager:TakeDamage(data.Coins, target, stats.Damage)
         end
     else

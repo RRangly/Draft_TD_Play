@@ -96,7 +96,7 @@ function Minigunner.update(data, towerIndex, deltaTime)
     local towerManager = data.Towers
     local mobManager = data.Mobs
     local waypoints = data.Map.WayPoints
-    local player = data.Player
+    local clientLoad = data.ClientLoad
     local tower = towerManager.Towers[towerIndex]
     local stats = Minigunner.Stats[tower.Level]
     if towerManager:attackAvailable(towerIndex, mobManager.Mobs) then
@@ -119,8 +119,8 @@ function Minigunner.update(data, towerIndex, deltaTime)
         tower.AttackCD += deltaTime
         if tower.AttackCD >= stats.AttackSpeed then
             tower.AttackCD = 0
-            towerManager:playSound(player, "MinigunShot")
-            towerManager:playAnimation(player, towerIndex, mobPart.Position)
+            clientLoad:playSound("MinigunShot")
+            clientLoad:playAnimation(towerIndex, mobPart.Position)
             mobManager:TakeDamage(data.Coins, target, stats.Damage)
         end
     else

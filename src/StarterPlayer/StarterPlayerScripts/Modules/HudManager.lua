@@ -157,22 +157,21 @@ function TowerManager.placeTower(coins)
     local placing = TowerManager.Placing
     local rayCast = TowerManager.RayCast
 
-    if not rayCast then
-        return
+    if rayCast then
+        local towerInfo = require(Towers:FindFirstChild(TowerManager.Placing.Tower))
+        local chunkPos, tilePos = TowerManager.getTileCoord(rayCast.Part)
+        local available = TowerManager.checkPlacementAvailable(towerInfo.Placement.Type, rayCast.Part)
+        if available then
+            if coins >= towerInfo.Stats[1].Cost then
+                TowerManager.Placing = nil
+                RemoteEvent:FireServer("PlaceTower", placing.Tower, {Chunk = chunkPos; Tile = tilePos;})
+            else
+                print("Too expensive")
+            end
+        end
     end
-    local towerInfo = require(Towers:FindFirstChild(TowerManager.Placing.Tower))
-    local chunkPos, tilePos = TowerManager.getTileCoord(rayCast.Part)
-    local available = TowerManager.checkPlacementAvailable(towerInfo.Placement.Type, rayCast.Part)
-    if available then
-        if placing.Model then
-            placing.Model:Destroy()
-        end
-        if coins >= towerInfo.Stats[1].Cost then
-            TowerManager.Placing = nil
-            RemoteEvent:FireServer("PlaceTower", placing.Tower, {Chunk = chunkPos; Tile = tilePos;})
-        else
-            print("Too expensive")
-        end
+    if placing.Model then
+        placing.Model:Destroy()
     end
 end
 

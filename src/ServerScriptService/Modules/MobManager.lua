@@ -71,58 +71,11 @@ function MobManager.generateSpecialMob(weight)
     return mob
 end
 
-local GenerationFunctions = {
-    Default = MobManager.generateDefaultMob;
-    Speed = MobManager.generateSpeedMob;
-    Tank = MobManager.generateTankMob;
-    Special = MobManager.generateSpecialMob;
-}
-
-function MobManager:startWave(mapManager)
-    self.CurrentWave += 1
-    self.Starting = true
-    local difficultyWeight = 1.095^self.CurrentWave * 100
-    local waveType = math.random(1, 10)
-    local mobsDistribution
-    local totalMob
-    if waveType < 3 then
-        totalMob = math.floor(difficultyWeight / math.random(41, 46))
-        mobsDistribution = {
-            Default = math.ceil(totalMob * 0.2);
-            Tank = math.ceil(totalMob * 0.55);
-            Speed = math.ceil(totalMob * 0.1);
-            Special = math.ceil(totalMob * 0.15);
-        }
-    elseif waveType < 5 then
-        totalMob = math.floor(difficultyWeight / math.random(26, 33))
-        mobsDistribution = {
-            Default = math.ceil(totalMob * 0.2);
-            Tank = math.ceil(totalMob * 0.15);
-            Speed = math.ceil(totalMob * 0.5);
-            Special = math.ceil(totalMob * 0.15);
-        }
-    else
-        totalMob = math.floor(difficultyWeight / math.random(22, 28))
-        mobsDistribution = {
-            Default = math.ceil(totalMob * 0.6);
-            Tank = math.ceil(totalMob * 0.15);
-            Speed = math.ceil(totalMob * 0.1);
-            Special = math.ceil(totalMob * 0.15);
-        }
-    end
-    local mobWeight = math.floor(difficultyWeight / 35)
-    for mobType, mobAmount in pairs(mobsDistribution) do
-        for _ = 1, mobAmount, 1 do
-            local mob = GenerationFunctions[mobType](mobWeight)
-            table.insert(self.PreSpawn, math.random(1, #self.PreSpawn + 1), mob)
-        end
-    end
-    print("Starting Wave ".. self.CurrentWave)
-    self.Starting = false
-    for _ = 1, #self.PreSpawn, 1 do
-        local mob = self.PreSpawn[1]
+function MobManager:spawnWave(toSpawn)
+    for _ = 1, #toSpawn, 1 do
+        local mob = toSpawn[1]
         self:Spawn(mob)
-        table.remove(self.PreSpawn, 1)
+        table.remove(toSpawn, 1)
         task.wait(0.25)
     end
 end
@@ -176,13 +129,11 @@ function MobManager:startMovement(playerIndex, mobIndex)
     return healthReduction
 end
 
-function MobManager.startGame()
+function MobManager.new()
     local mobs = {
         CurrentWave = 0;
         Mobs = {};
-        PreSpawn = {};
         CurrentMoving = {};
-        Starting = true;
     }
     setmetatable(mobs, MobManager)
     return mobs

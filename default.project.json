@@ -11,6 +11,9 @@
         "DraftBegin": {
           "$className": "BindableEvent"
         },
+        "DraftUpdate": {
+          "$className": "BindableEvent"
+        },
         "CardsUpdate": {
           "$className": "BindableEvent"
         },

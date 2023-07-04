@@ -50,7 +50,7 @@ function MapGenerator.generateMap(player)
             local coordText = block.CoordGui.CoordText
             coordText.Text = "( " .. x .. " , " .. y .. " )"
             local path = false
-            if y == 4 then
+            if y == 4 and x > 4 then
                 coordText.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
                 path = true
                 table.insert(map.WayPoints, 1, Vector3.new(x * 5, 10, y * 5))
@@ -65,7 +65,6 @@ function MapGenerator.generateMap(player)
             }
         end
     end
-    player.Character:MoveTo(Vector3.new(2.5, 5, 12.5))
     return map
 end
 
