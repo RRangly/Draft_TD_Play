@@ -83,10 +83,10 @@ function Mortar.playAnim(model, targetPos)
 end
 
 function Mortar.update(data, towerIndex, deltaTime)
-    local towerManager = data.Towers
-    local mobManager = data.Mobs
-    local waypoints = data.Map.WayPoints
-    local player = data.Player
+    local towerManager = data.TowerManager
+    local mobManager = data.MobManager
+    local waypoints = data.MapManager.WayPoints
+    local clientLoad = data.ClientLoad
     local tower = towerManager.Towers[towerIndex]
     local stats = Mortar.Stats[tower.Level]
     if towerManager:attackAvailable(towerIndex, mobManager.Mobs) then
@@ -104,7 +104,7 @@ function Mortar.update(data, towerIndex, deltaTime)
         tower.AttackCD += deltaTime
         if tower.AttackCD >= stats.AttackSpeed then
             tower.AttackCD = 0
-            towerManager:playSound(player, "GunShot")
+            clientLoad:playSound("GunShot")
             Mortar.playAnim(model, targetPos)
             local exp = Instance.new("Part", Workspace)
             exp.Shape = Enum.PartType.Ball
@@ -116,7 +116,7 @@ function Mortar.update(data, towerIndex, deltaTime)
             for i, mob in pairs(mobManager.Mobs) do
                 local mobPos = mob.Object:GetPivot().Position
                 if (mobPos - targetPos).Magnitude < stats.ExploRad then
-                    mobManager:TakeDamage(data.Coins, i, stats.Damage)
+                    mobManager:TakeDamage(data.CoinManager, i, stats.Damage)
                 end
             end
             wait(0.5)

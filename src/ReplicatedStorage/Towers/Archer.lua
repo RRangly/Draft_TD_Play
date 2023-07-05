@@ -53,9 +53,9 @@ local Archer = {
 
 
 function Archer.update(data, towerIndex, deltaTime)
-    local towerManager = data.Towers
-    local mobManager = data.Mobs
-    local waypoints = data.Map.WayPoints
+    local towerManager = data.TowerManager
+    local mobManager = data.MobManager
+    local waypoints = data.MapManager.WayPoints
     local player = data.Player
     local tower = towerManager.Towers[towerIndex]
     local stats = Archer.Stats[tower.Level]
@@ -98,7 +98,7 @@ function Archer.update(data, towerIndex, deltaTime)
                     for i, mob in mobManager.Mobs do
                         if otherPart:IsDescendantOf(mob.Object) then
                             table.insert(alreadyHit, i)
-                            mobManager:TakeDamage(data.Coins, i, stats.Damage)
+                            mobManager:TakeDamage(data.CoinManager, i, stats.Damage)
                         end
                     end
                 end

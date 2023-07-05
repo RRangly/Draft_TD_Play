@@ -106,7 +106,7 @@ function TowerManager.updateSelection(coins, towers, towerIndex)
     local upgradeButton = upgrade.Upgrade
     upgradeButton.Text = "Upgrade: " .. upgradeStats.Cost
     upgradeButton.MouseButton1Click:Connect(function()
-        if coins.Coins >= upgradeStats.Cost then
+        if coins >= upgradeStats.Cost then
             RemoteEvent:FireServer("ManageTower", "Upgrade", towerIndex)
         else
             print("Not Enough Money!")
@@ -135,7 +135,6 @@ function TowerManager.getTileCoord(block)
 end
 
 function TowerManager.checkPlacementAvailable(towerType, block)
-    local chunks = Data.Data.Map.Chunks
     local tileType = block:GetAttribute("Type")
     if tileType == towerType then
         return true
@@ -145,15 +144,15 @@ function TowerManager.checkPlacementAvailable(towerType, block)
     return false
 end
 
-function TowerManager.startPlacement(tower)
+function TowerManager.startPlacement(tower, index)
     print("SP", tower, TowerManager)
     TowerManager.Placing = {
         Tower = tower;
+        TowerIndex = index
     }
 end
 
-function TowerManager.placeTower(coins)
-    local map = Data.Data.Map
+function TowerManager.placeTower()
     local placing = TowerManager.Placing
     local rayCast = TowerManager.RayCast
 
@@ -162,12 +161,8 @@ function TowerManager.placeTower(coins)
         local chunkPos, tilePos = TowerManager.getTileCoord(rayCast.Part)
         local available = TowerManager.checkPlacementAvailable(towerInfo.Placement.Type, rayCast.Part)
         if available then
-            if coins >= towerInfo.Stats[1].Cost then
-                TowerManager.Placing = nil
-                RemoteEvent:FireServer("PlaceTower", placing.Tower, {Chunk = chunkPos; Tile = tilePos;})
-            else
-                print("Too expensive")
-            end
+            TowerManager.Placing = nil
+            RemoteEvent:FireServer("PlaceTower", placing.TowerIndex, {Chunk = chunkPos; Tile = tilePos;})
         end
     end
     if placing.Model then
@@ -212,10 +207,16 @@ function TowerManager.updateCards(cards)
         frame.CostLabel.Text = towerInfo.Stats[1].Cost
         frame.InputBegan:Connect(function(inputObj)
             if inputObj.UserInputType == Enum.UserInputType.MouseButton1 then
-                TowerManager.startPlacement(tower)
+                TowerManager.startPlacement(tower, i)
             end
         end)
     end
+end
+
+function TowerManager.update()
+    local data = Data.Data
+    TowerManager.updateSelection(data.CoinManager.Coins, data.TowerManager.Towers, TowerManager.Selected.Index)
+    TowerManager.updateCards(data.TowerManager.Cards)
 end
 
 RunService.RenderStepped:Connect(function()
@@ -272,11 +273,11 @@ end)
 
 local BaseManager = {}
 
-function BaseManager.updateBaseHp(Base)
+function BaseManager.updateBaseHp(baseManager)
     local greenFactor = 255
     local redFactor = 255
-    local maxHp = Base.MaxHealth
-    local hp = Base.Health
+    local maxHp = baseManager.MaxHealth
+    local hp = baseManager.Health
     if hp / maxHp < 0.5 then
         greenFactor = ((hp / maxHp) * 2) * 255
     end
@@ -290,12 +291,15 @@ function BaseManager.updateBaseHp(Base)
     text.Text = hp .. " / " .. maxHp
 end
 
+function BaseManager.update()
+    BaseManager.updateBaseHp(Data.Data.BaseManager)
+end
 local WaveManager = {}
 
 function WaveManager.starting(wave)
     local message = CurrentGui.WaveStartingMessage
     message.Visible = true
-    for i = 5, 1, -1 do
+    for i = 10, 1, -1 do
         message.Text = "Wave ".. wave .. " Starting in "..  i .. " seconds"
         task.wait(1)
     end
@@ -307,20 +311,58 @@ function WaveManager.updateWave(wave)
     waveText.Text = "Wave " .. wave
 end
 
+function WaveManager.update()
+    WaveManager.updateWave(Data.Data.WaveManager.CurrentWave)
+end
+
 local CoinManager = {}
 
 function CoinManager.updateCoins(coins)
-    --local audio = SoundFX.Money_Gain
-    --audio:Play()
     local coinText = CurrentGui.CoinText
-    coinText.Text = "Coins " .. coins.Coins
+    coinText.Text = "Coins " .. coins
 end
 
+function CoinManager.update()
+    CoinManager.updateCoins(Data.Data.CoinManager.Coins)
+end
+
+local ShopManager = {}
+
+function ShopManager.updateShop(shopManager)
+    local shopFrame = CurrentGui.Shop
+    local shopItems = shopManager.ShopItems
+    local rerollCost = math.floor(1.1 ^ shopManager.ReRoll * 115)
+    shopFrame.ReRoll.Cost.Text = rerollCost
+    shopFrame.ReRoll.MouseButton1Click:Connect(function()
+        RemoteEvent:FireServer("ManageShop", "ReRoll")
+    end)
+    for i = 1, 3, 1 do
+        local frame = shopFrame.ShopItems:FindFirstChild(i)
+        if not shopItems[i] then
+            frame.Visible = false
+            continue
+        end
+        local card = require(Towers:FindFirstChild(shopItems[i]))
+        frame.Visible = true
+        frame.CardName.Text = card.Name
+        frame.CardCost.Text = card.Stats[1].Cost
+        frame.InputBegan:Connect(function(inputObj)
+            if inputObj.UserInputType == Enum.UserInputType.MouseButton1 then
+                RemoteEvent:FireServer("ManageShop", "Pick", i)
+            end
+        end)
+    end
+end
+
+function ShopManager.update()
+    ShopManager.updateShop(Data.Data.ShopManager)
+end
 local HudManager = {
     BaseManager = BaseManager;
     TowerManager = TowerManager;
     WaveManager = WaveManager;
     CoinManager = CoinManager;
+    ShopManager = ShopManager;
 }
 
 function HudManager.start()

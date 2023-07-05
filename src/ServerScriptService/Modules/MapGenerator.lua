@@ -19,7 +19,7 @@ function MapGenerator.oppositeDirection(direction)
     return returnVal
 end
 
-function MapGenerator.generateMap(player)
+function MapGenerator.generateMap()
     local map = {
         Chunks = {};
         PathGenDirection = 2;

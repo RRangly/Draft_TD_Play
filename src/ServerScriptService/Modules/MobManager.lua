@@ -91,8 +91,7 @@ function MobManager:TakeDamage(coinManager, mobIndex, damage)
     end
 end
 
-function MobManager:startMovement(playerIndex, mobIndex)
-    local wayPoints = table.clone(Data[playerIndex].Map.WayPoints)
+function MobManager:startMovement(wayPoints, mobIndex)
     local mob = self.Mobs[mobIndex]
     local moveConnection
     local humanoid = mob.Object.Humanoid

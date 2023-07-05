@@ -123,29 +123,21 @@ function TowerManager:checkPlacementAvailable(chunks, towerName, position)
     return false
 end
 
-function TowerManager:place(playerIndex, towerName, position)
+function TowerManager:place(playerIndex, towerIndex, position)
     local data = Data[playerIndex]
     local cards = self.Cards
-    local coins = data.Coins
-    local chunks = data.Map.Chunks
-    local tower = require(Towers:FindFirstChild(towerName))
-    local cost = tower.Stats[1].Cost
+    local chunks = data.MapManager.Chunks
     local chunkPos = position.Chunk
     local tilePos = position.Tile
-    local hasCard = false
-    for _, cardName in pairs(cards) do
-        if cardName == towerName then
-            hasCard = true
-        end
-    end
-    if not hasCard then
+    local card = cards[towerIndex]
+    if not card then
         return
     end
-    if coins.Coins >= cost then
-        local placeTile = TowerManager:checkPlacementAvailable(chunks, towerName, position)
+    --local tower = require(Towers:FindFirstChild(cards[towerIndex]))
+    local placeTile = TowerManager:checkPlacementAvailable(chunks, card, position)
         if placeTile then
             placeTile.Occupied = true
-            local clone = TowerModels:FindFirstChild(towerName):Clone() 
+            local clone = TowerModels:FindFirstChild(card):Clone() 
             clone.Parent = WorkSpaceTower
             for _, part in pairs(clone:GetDescendants()) do
                 if part:IsA("BasePart") then
@@ -157,9 +149,8 @@ function TowerManager:place(playerIndex, towerName, position)
                 end
             end
             clone:MoveTo(Vector3.new(chunkPos.X * 50 + tilePos.X * 5, 5, chunkPos.Y * 50 + tilePos.Y * 5))
-            coins.Coins -= cost
             table.insert(self.Towers, {
-                Name = towerName;
+                Name = card;
                 Model = clone;
                 AttackCD = 0;
                 PreAttackCD = 0;
@@ -167,23 +158,22 @@ function TowerManager:place(playerIndex, towerName, position)
                 Target = "First";
                 Position = position
             })
+            table.remove(self.Cards, towerIndex)
             return true
         end
-    end
     return false
 end
 
 function TowerManager:upgrade(playerIndex, manageType, towerIndex)
     local data = Data[playerIndex]
-    local towerManager = data.Towers
     local coinManager = data.Coins
-    local tower = towerManager.Towers[towerIndex]
+    local tower = self.Towers[towerIndex]
     if tower then
         local towerInfo = require(Towers:FindFirstChild(tower.Name))
         if manageType == "Sell" then
             tower.Model:Destroy()
             coinManager.Coins += towerInfo.Stats[1].Cost
-            table.remove(towerManager.Towers, towerIndex)
+            table.remove(self.Towers, towerIndex)
             return true
         end
         if manageType == "Upgrade" then

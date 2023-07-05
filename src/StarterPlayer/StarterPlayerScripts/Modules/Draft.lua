@@ -4,22 +4,51 @@ local TweenService = game:GetService("TweenService")
 
 local Towers = ReplicatedStorage.Towers
 local RemoteEvent = ReplicatedStorage.ServerCommunication
-local GuiAssets = ReplicatedStorage.PlayerGuiAssets
-local DraftUpdate = ReplicatedStorage.ClientEvents.DraftUpdate
 local PlayerGuis = ReplicatedStorage.PlayerGuis
+local GuiAssets = ReplicatedStorage.PlayerGuiAssets
+local Cover = PlayerGuis.Cover:Clone()
+
+local ClientEvents = ReplicatedStorage.ClientEvents
+local DraftUpdate = ReplicatedStorage.ClientEvents.DraftUpdate
+local GameStarted = ClientEvents.GameStarted
 local DraftEnd = false
 
 local Player = Players.LocalPlayer
 local PlayerGui = Player.PlayerGui
 
-local Draft = {}
+Cover.Parent = PlayerGui
+local Draft = {
+    Cards = {}
+}
 
-local function endDraft(gui)
+local function endDraft(gui, playerNum)
+    gui.DraftFrame:Destroy()
+    gui.PickedFrame:Destroy()
+    gui.DraftInfo:Destroy()
+    local endFrame = gui.EndFrame
+    local xIndex = 1 / (#Draft.Cards[playerNum] + 1)
+    coroutine.wrap(function()
+        for i, cardName in pairs(Draft.Cards[playerNum]) do
+            local clone = GuiAssets.DraftCard:Clone()
+            clone.Parent = endFrame
+            clone.CardName.Text = cardName
+            clone.Position = UDim2.new(xIndex * i, 0, 1, 0)
+            local tween = TweenService:Create(clone, TweenInfo.new(1, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Position = UDim2.new(xIndex * i, 0, 0.5, 0)})
+            tween:Play()
+            task.wait(0.5)
+        end
+    end)()
+    GameStarted.Event:Wait()
+    Cover:Destroy()
     gui:Destroy()
 end
 
 function Draft.updateDraftGui(gui, draftCards, pickPlayer, pickNum, nextTurn)
+    if not Draft.Cards[pickPlayer] then
+        Draft.Cards[pickPlayer] = {}
+    end
     local pickedCard = draftCards[pickNum]
+    table.insert(Draft.Cards[pickPlayer], pickedCard)
     local draftFrame = gui.DraftFrame
     local draftInfo = gui.DraftInfo
     local pickedFrame = gui.PickedFrame
@@ -39,10 +68,9 @@ function Draft.updateDraftGui(gui, draftCards, pickPlayer, pickNum, nextTurn)
     tween:Play()
     tween.Completed:Wait()
     clone:Destroy()
-    if DraftEnd then
-        return
+    if draftInfo then
+        draftInfo.Text = "player " .. nextTurn .. "'s turn"
     end
-    draftInfo.Text = "player " .. nextTurn .. "'s turn"
 end
 
 function Draft.draftBegin(draftCards, playerNum)
@@ -86,14 +114,9 @@ function Draft.draftBegin(draftCards, playerNum)
             turn = nextTurn
         elseif type == "End" then
             task.wait(1)
-            draftGui.DraftFrame:Destroy()
-            draftGui.PickedFrame:Destroy()
-            for i = 5, 1, -1 do
-                DraftEnd = true
-                draftInfo.Text = "Game Starting in ".. i .." seconnds"
-                task.wait(1)
-            end
+            endDraft(draftGui, playerNum)
         end
     end)
 end
+
 return Draft

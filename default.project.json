@@ -14,31 +14,16 @@
         "DraftUpdate": {
           "$className": "BindableEvent"
         },
-        "CardsUpdate": {
-          "$className": "BindableEvent"
-        },
-        "TowerUpdate": {
-          "$className": "BindableEvent"
-        },
-        "MobUpdate": {
+        "Update": {
           "$className": "BindableEvent"
         },
         "GameStarted": {
-          "$className": "BindableEvent"
-        },
-        "BaseHpUpdate": {
           "$className": "BindableEvent"
         },
         "WaveReady": {
           "$className": "BindableEvent"
         },
         "WaveStart": {
-          "$className": "BindableEvent"
-        },
-        "CoinUpdate": {
-          "$className": "BindableEvent"
-        },
-        "MapUpdate": {
           "$className": "BindableEvent"
         }
       },
@@ -71,6 +56,9 @@
           "$className": "BindableEvent"
         },
         "ManageTower": {
+          "$className": "BindableEvent"
+        },
+        "ManageShop": {
           "$className": "BindableEvent"
         }
       }

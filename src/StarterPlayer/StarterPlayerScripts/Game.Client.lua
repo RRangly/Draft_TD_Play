@@ -20,45 +20,33 @@ local PlayerGui = Player.PlayerGui
 
 local ClientEvents = ReplicatedStorage.ClientEvents
 local DraftBegin = ClientEvents.DraftBegin
-local CardsUpdate = ClientEvents.CardsUpdate
-local TowerUpdate = ClientEvents.TowerUpdate
 local GameStarted = ClientEvents.GameStarted
-local MobUpdate = ClientEvents.MobUpdate
-local BaseHpUpdate = ClientEvents.BaseHpUpdate
 local WaveReady = ClientEvents.WaveReady
 local WaveStart = ClientEvents.WaveStart
-local CoinsUpdate = ClientEvents.CoinUpdate
-local MapUpdate = ClientEvents.MapUpdate
+local Update = ClientEvents.Update
 
 local function startGame(data)
     Data.Data = data
     HudManager.start()
-    HudManager.TowerManager.updateCards(data.Towers.Cards)
-    HudManager.BaseManager.updateBaseHp(data.Base)
-    HudManager.WaveManager.updateWave(data.Mobs.CurrentWave)
-    HudManager.CoinManager.updateCoins(data.Coins)
+    --HudManager.TowerManager.updateCards(data.TowerManager.Cards)
+    HudManager.TowerManager.update()
+    HudManager.BaseManager.update()
+    HudManager.WaveManager.update()
+    HudManager.CoinManager.update()
+    HudManager.ShopManager.update()
 end
-
-TowerUpdate.Event:Connect(function(towers)
-    Data.Data.Towers = towers
-    HudManager.TowerManager.updateSelection(Data.Coins, towers.Towers, HudManager.TowerManager.Selected.Index)
-end)
-
-CardsUpdate.Event:Connect(function(cards)
-    Data.Data.Cards = cards
-    HudManager.TowerManager.updateCards()
-end)
 
 DraftBegin.Event:Connect(Draft.draftBegin)
 
-MobUpdate.Event:Connect(function(mobs)
-    Data.Data.Mobs = mobs
-    MobHealthDisplay.update(mobs.Mobs)
-end)
-
-BaseHpUpdate.Event:Connect(function(base)
-    Data.Data.Base = base
-    HudManager.BaseManager.updateBaseHp(base)
+Update.Event:Connect(function(dataType, data)
+    Data.Data[dataType] = data
+    if dataType == "MobManager" then
+        MobHealthDisplay.update(data.Mobs)
+        return
+    end
+    if HudManager[dataType] then
+        HudManager[dataType].update()
+    end
 end)
 
 WaveReady.Event:Connect(function(wave)
@@ -67,11 +55,6 @@ end)
 
 WaveStart.Event:Connect(function(wave)
     HudManager.WaveManager.updateWave(wave)
-end)
-
-CoinsUpdate.Event:Connect(function(coins)
-    Data.Data.Coins = coins
-    HudManager.CoinManager.updateCoins(coins)
 end)
 
 local gameStarted = GameStarted.Event:Wait()
@@ -87,9 +70,9 @@ UserInputService.InputBegan:Connect(function(inputObj)
     if #frames == 0 then
         if inputObj.UserInputType == Enum.UserInputType.MouseButton1 then
             if placing then
-                HudManager.TowerManager.placeTower(Data.Data.Coins.Coins)
+                HudManager.TowerManager.placeTower(Data.Data.CoinManager.Coins)
             else
-                HudManager.TowerManager.selectTower(Data.Data.Coins, Data.Data.Towers.Towers)
+                HudManager.TowerManager.selectTower(Data.Data.CoinManager, Data.Data.TowerManager.Towers)
             end
         end
     end
@@ -102,4 +85,8 @@ RunService.Heartbeat:Connect(function()
             GameFXManager.executeLoad(Data, instance)
         end
     end
+end)
+
+Player.CharacterAdded:Connect(function()
+    startGame(Data.Data)
 end)

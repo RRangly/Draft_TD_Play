@@ -58,9 +58,9 @@ function Accelerator.playAnim(model, animName, animLength)
 end
 
 function Accelerator.update(data, towerIndex, deltaTime)
-    local towerManager = data.Towers
-    local mobManager = data.Mobs
-    local waypoints = data.Map.WayPoints
+    local towerManager = data.TowerManager
+    local mobManager = data.MobManager
+    local waypoints = data.MapManager.WayPoints
     local clientLoad = data.ClientLoad
     local tower = towerManager.Towers[towerIndex]
     local stats = Accelerator.Stats[tower.Level]
@@ -86,7 +86,7 @@ function Accelerator.update(data, towerIndex, deltaTime)
             tower.AttackCD = 0
             clientLoad:playSound("MinigunShot")
             clientLoad:playAnimation(towerIndex, mobPart.Position)
-            mobManager:TakeDamage(data.Coins, target, stats.Damage)
+            mobManager:TakeDamage(data.CoinManager, target, stats.Damage)
         end
     else
         tower.AttackCD = 0
