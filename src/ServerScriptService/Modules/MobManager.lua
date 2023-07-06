@@ -1,9 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
-local Data = require(script.Parent.Data)
-
-local Mobs = ReplicatedStorage.Mobs
+--local Mobs = ReplicatedStorage.Mobs
 local MobModels = ReplicatedStorage.MobModels
 local MobFolder = Workspace.Mobs
 
@@ -11,7 +9,7 @@ local MobManager = {}
 MobManager.__index = MobManager
 
 function MobManager:Spawn(mobInfo)
-    local model = MobModels:FindFirstChild("Zombie")
+    local model = MobModels:FindFirstChild(mobInfo.Model)
 
     local clone = model:Clone()
     local humanoid = clone.Humanoid
@@ -40,6 +38,7 @@ end
 
 function MobManager.generateDefaultMob(weight)
     local mob = {
+        Model = "Zombie";
         MaxHealth = weight * 2;
         WalkSpeed = math.floor((math.log(weight, 1.095) + 5)^(1/7)*6);
     }
@@ -49,6 +48,7 @@ end
 
 function MobManager.generateSpeedMob(weight)
     local mob = {
+        Model = "Speedy";
         MaxHealth = math.ceil(weight * 1.5);
         WalkSpeed = math.floor((math.log(weight, 1.095) + 5)^(1/3)*8);
     }
@@ -57,6 +57,7 @@ end
 
 function MobManager.generateTankMob(weight)
     local mob = {
+        Model = "Stone_Zombie";
         MaxHealth = math.ceil(weight * 4.5);
         WalkSpeed = math.floor((math.log(weight, 1.095) + 5)^(1/8)*4);
     }
@@ -65,6 +66,7 @@ end
 
 function MobManager.generateSpecialMob(weight)
     local mob = {
+        Model = "Zombie";
         MaxHealth = math.ceil(weight * 2.5);
         WalkSpeed = math.floor((math.log(weight, 1.095) + 5)^(1/7)*6);
     }
@@ -76,7 +78,7 @@ function MobManager:spawnWave(toSpawn)
         local mob = toSpawn[1]
         self:Spawn(mob)
         table.remove(toSpawn, 1)
-        task.wait(0.25)
+        task.wait(0.2)
     end
 end
 

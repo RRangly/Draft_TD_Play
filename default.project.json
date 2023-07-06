@@ -60,6 +60,9 @@
         },
         "ManageShop": {
           "$className": "BindableEvent"
+        },
+        "GameLoaded": {
+          "$className": "BindableEvent"
         }
       }
     },

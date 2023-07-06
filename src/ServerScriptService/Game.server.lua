@@ -3,7 +3,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
-local Workspace = game:GetService("Workspace")
 
 local Towers = ReplicatedStorage.Towers
 
@@ -12,6 +11,7 @@ local DraftEnd = ServerStorage.ServerEvents.DraftEnd
 local PlaceTower = ServerStorage.ServerEvents.PlaceTower
 local ManageTower = ServerStorage.ServerEvents.ManageTower
 local ManageShop = ServerStorage.ServerEvents.ManageShop
+local GameLoaded = ServerStorage.ServerEvents.GameLoaded
 
 local Modules = ServerScriptService.Modules
 local Data = require(Modules.Data)
@@ -26,7 +26,7 @@ local WaveManager = require(Modules.WaveManager)
 local ClientLoad = require(Modules.ClientLoad)
 local ShopManager = require(Modules.ShopManager)
 
-local PlayingPlayers = {}
+--local PlayingPlayers = {}
 local Game = {}
 
 function Game.runUpdate(playerIndex, deltaTime)
@@ -104,7 +104,7 @@ function Game.start(players)
     end)
 end
 
-function Game.singleTest(player)
+function Game.singlePlayer(player)
     Data[1] = {}
     Data[1].Player = player
     Draft.megadraft({player})
@@ -124,6 +124,9 @@ function Game.singleTest(player)
     RemoteEvent:FireClient(player, "GameStarted", Data[1])
     RemoteEvent:FireClient(player, "WaveReady", Data[1].MobManager.CurrentWave + 1)
     RemoteEvent:FireClient(player, "WaveStart", Data[1].MobManager.CurrentWave)
+    player.CharacterAdded:Connect(function()
+        player.Character:MoveTo(Vector3.new(25, 5, 25))
+    end)
     local updateTime = 0
     RunService.Heartbeat:Connect(function(deltaTime)
         Game.runUpdate(1, deltaTime)
@@ -136,23 +139,14 @@ function Game.singleTest(player)
     end)
     while true do
         RemoteEvent:FireClient(player, "WaveReady", Data[1].WaveManager.CurrentWave + 1)
-        if (Data[1].WaveManager.CurrentWave + 1) % 5 == 0 then
-            Data[1].MapManager:generateChunk()
-        end
         task.wait(10)
         RemoteEvent:FireClient(player, "WaveStart", Data[1].WaveManager.CurrentWave + 1)
         Data[1].WaveManager:startWave(Data[1].MobManager)
     end
 end
 
-Players.PlayerAdded:Connect(function(player)
-    print("PlayerAdded", player)
-    repeat
-        wait()
-    until player:HasAppearanceLoaded()
-    task.wait(3)
-    print("GameStarting")
-    Game.singleTest(player)
+GameLoaded.Event:Connect(function(player)
+    Game.singlePlayer(player)
 end)
 
 PlaceTower.Event:Connect(function(player, towerName, position)
@@ -178,14 +172,18 @@ ManageTower.Event:Connect(function(player, manageType, towerIndex)
 end)
 
 ManageShop.Event:Connect(function(player, manageType, ...)
-    for i, data in pairs(Data) do
+    for _, data in pairs(Data) do
         if data.Player == player then
             if manageType == "Pick" then
+                data.ShopManager:pick(data, ...)
                 RemoteEvent:FireClient(player, "Update", "TowerManager", data.TowerManager)
                 RemoteEvent:FireClient(player, "Update", "ShopManager", data.ShopManager)
-                data.ShopManager:pick(data, ...)
             elseif manageType == "ReRoll" then
-                data.ShopManager:reRoll(data.CoinManager)
+                print("CallReRoll")
+                data.ShopManager:reRoll(data.CoinManager, "GameServer")
+                RemoteEvent:FireClient(player, "Update", "ShopManager", data.ShopManager)
+            elseif manageType == "Chunk" then
+                data.ShopManager:purchaseChunk(data.CoinManager, data.MapManager)
                 RemoteEvent:FireClient(player, "Update", "ShopManager", data.ShopManager)
             end
         end

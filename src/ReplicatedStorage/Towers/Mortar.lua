@@ -13,41 +13,41 @@ local Mortar = {
             LevelName = "Basic";
             AttackSpeed = 3;
             AttackRange = 34;
-            Damage = 12;
+            Damage = 4;
             ExploRad = 6;
-            Cost = 300;
+            Cost = 850;
         },
         {
             LevelName = "Better Bombs";
             AttackSpeed = 3;
             AttackRange = 36;
-            Damage = 16;
+            Damage = 5;
             ExploRad = 8;
-            Cost = 150;
+            Cost = 1100;
         },
         {
             LevelName = "Improved Reloading";
             AttackSpeed = 2.6;
             AttackRange = 38;
-            Damage = 20;
+            Damage = 6;
             ExploRad = 8;
-            Cost = 350;
+            Cost = 1300;
         },
         {
             LevelName = "Optimized Mortar";
             AttackSpeed = 2.2;
             AttackRange = 42;
-            Damage = 24;
+            Damage = 6;
             ExploRad = 10;
-            Cost = 600;
+            Cost = 1600;
         },
         {
             LevelName = "Professional";
             AttackSpeed = 2;
             AttackRange = 48;
-            Damage = 42;
+            Damage = 10;
             ExploRad = 12;
-            Cost = 1400;
+            Cost = 2800;
         }
     };
     Placement = {

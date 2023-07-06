@@ -1,6 +1,5 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
-local ServerScriptService = game:GetService("ServerScriptService")
 
 local MapAssets = ReplicatedStorage.MapAssets
 local MapFolder = Workspace.Map

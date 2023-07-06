@@ -16,8 +16,8 @@ function GameMechanics.create(p0: Vector3, p1: Vector3)
 end
 
 function GameMechanics.mobMovementPrediction(data, mobIndex, distance)
-    local mobManager = data.Mobs
-    local wayPoints = data.Map.WayPoints
+    local mobManager = data.MobManager
+    local wayPoints = data.MapManager.WayPoints
     local mob = mobManager.Mobs[mobIndex]
     local mobPart = mob.Object.PrimaryPart
 

@@ -26,10 +26,11 @@ function ClientLoad:playAnimation(towerIndex, targetPos)
     instance:Destroy()
 end
 
-function ClientLoad:playParticle(player, towerIndex, target)
+function ClientLoad:playParticle(towerIndex, target)
     local instance = Instance.new("StringValue", self.Folder)
     instance.Name = "PlayParticle"
     instance.Value = towerIndex
+    instance:SetAttribute("Target", target)
     task.spawn(function()
         task.wait(0.2)
         instance:Destroy()

@@ -1,7 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
-local ClientLoad = ReplicatedStorage.ClientLoad
 local TowerModels = ReplicatedStorage.TowerModels
 local Towers = ReplicatedStorage.Towers
 local WorkSpaceTower = Workspace.Towers
@@ -137,7 +136,7 @@ function TowerManager:place(playerIndex, towerIndex, position)
     local placeTile = TowerManager:checkPlacementAvailable(chunks, card, position)
         if placeTile then
             placeTile.Occupied = true
-            local clone = TowerModels:FindFirstChild(card):Clone() 
+            local clone = TowerModels:FindFirstChild(card):Clone()
             clone.Parent = WorkSpaceTower
             for _, part in pairs(clone:GetDescendants()) do
                 if part:IsA("BasePart") then
@@ -166,7 +165,7 @@ end
 
 function TowerManager:upgrade(playerIndex, manageType, towerIndex)
     local data = Data[playerIndex]
-    local coinManager = data.Coins
+    local coinManager = data.CoinManager
     local tower = self.Towers[towerIndex]
     if tower then
         local towerInfo = require(Towers:FindFirstChild(tower.Name))
@@ -178,8 +177,8 @@ function TowerManager:upgrade(playerIndex, manageType, towerIndex)
         end
         if manageType == "Upgrade" then
             if coinManager.Coins >= towerInfo.Stats[tower.Level + 1].Cost then
-                tower.Level += 1
                 coinManager.Coins -= towerInfo.Stats[tower.Level + 1].Cost
+                tower.Level += 1
                 return true
             end
         end

@@ -4,10 +4,13 @@ local Towers = ReplicatedStorage.Towers
 local Shop = {}
 Shop.__index = Shop
 
-function Shop:reRoll(coinManager)
+function Shop:reRoll(coinManager, source)
+    print("Source", source)
     local cost = math.floor(1.1 ^ self.ReRoll * 115)
     if coinManager.Coins >= cost then
+        print("Coins", coinManager.Coins, cost)
         coinManager.Coins -= cost
+        print("CoinLeft", coinManager.Coins)
         local towers = Towers:GetChildren()
         for i = 1, 3, 1 do
             self.ShopItems[i] = towers[math.random(1, #towers)].Name
@@ -23,6 +26,15 @@ function Shop:reRollNoCost()
     end
 end
 
+function Shop:purchaseChunk(coinManager, mapManager)
+    local cost = math.floor(1.1 ^ self.Chunks * 825)
+    if coinManager.Coins >= cost then
+        coinManager.Coins -= cost
+        mapManager:generateChunk()
+        self.Chunks += 1
+    end
+end
+
 function Shop:pick(data, pickNum)
     local coinManager = data.CoinManager
     local towerManager = data.TowerManager
@@ -33,6 +45,7 @@ function Shop:pick(data, pickNum)
     local cardInfo = require(Towers:FindFirstChild(card))
     local cost = cardInfo.Stats[1].Cost
     if coinManager.Coins >= cost then
+        coinManager.Coins -= cost
         table.insert(towerManager.Cards, card)
         self.ShopItems[pickNum] = nil
     end
@@ -41,7 +54,8 @@ end
 function Shop.new()
     local auction = {
         ShopItems = {};
-        ReRoll = 0
+        ReRoll = 0;
+        Chunks = 0;
     }
     setmetatable(auction, Shop)
     return auction

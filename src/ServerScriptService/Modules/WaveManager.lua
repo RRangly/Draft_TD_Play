@@ -14,23 +14,23 @@ function WaveManager:startWave(mobManager)
     local mobsDistribution
     local totalMob
     if waveType < 3 then
-        totalMob = math.floor(difficultyWeight / math.random(41, 46))
+        totalMob = math.floor(difficultyWeight / math.random(15, 17))
         mobsDistribution = {
-            Default = math.ceil(totalMob * 0.2);
-            Tank = math.ceil(totalMob * 0.55);
-            Speed = math.ceil(totalMob * 0.1);
-            Special = math.ceil(totalMob * 0.15);
+            Default = math.ceil(totalMob * 0);
+            Tank = math.ceil(totalMob * 1);
+            Speed = math.ceil(totalMob * 0);
+            Special = math.ceil(totalMob * 0);
         }
     elseif waveType < 5 then
-        totalMob = math.floor(difficultyWeight / math.random(26, 33))
+        totalMob = math.floor(difficultyWeight / math.random(14, 16))
         mobsDistribution = {
-            Default = math.ceil(totalMob * 0.2);
-            Tank = math.ceil(totalMob * 0.15);
-            Speed = math.ceil(totalMob * 0.5);
-            Special = math.ceil(totalMob * 0.15);
+            Default = math.ceil(totalMob * 0);
+            Tank = math.ceil(totalMob * 0);
+            Speed = math.ceil(totalMob * 1);
+            Special = math.ceil(totalMob * 0);
         }
     else
-        totalMob = math.floor(difficultyWeight / math.random(22, 28))
+        totalMob = math.floor(difficultyWeight / math.random(10, 12))
         mobsDistribution = {
             Default = math.ceil(totalMob * 0.6);
             Tank = math.ceil(totalMob * 0.15);
@@ -38,7 +38,7 @@ function WaveManager:startWave(mobManager)
             Special = math.ceil(totalMob * 0.15);
         }
     end
-    local mobWeight = math.floor(difficultyWeight / 35)
+    local mobWeight = math.floor(difficultyWeight / 28)
     local toSpawn = {}
     for mobType, mobAmount in pairs(mobsDistribution) do
         for _ = 1, mobAmount, 1 do

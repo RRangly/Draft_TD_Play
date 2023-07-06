@@ -74,4 +74,5 @@ function MobHealthDisplay.update(mobs)
         end
     end
 end
+ 
 return MobHealthDisplay

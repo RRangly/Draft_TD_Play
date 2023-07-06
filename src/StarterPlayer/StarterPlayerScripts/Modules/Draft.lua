@@ -6,25 +6,30 @@ local Towers = ReplicatedStorage.Towers
 local RemoteEvent = ReplicatedStorage.ServerCommunication
 local PlayerGuis = ReplicatedStorage.PlayerGuis
 local GuiAssets = ReplicatedStorage.PlayerGuiAssets
-local Cover = PlayerGuis.Cover:Clone()
+
 
 local ClientEvents = ReplicatedStorage.ClientEvents
-local DraftUpdate = ReplicatedStorage.ClientEvents.DraftUpdate
+local DraftUpdate = ClientEvents.DraftUpdate
 local GameStarted = ClientEvents.GameStarted
-local DraftEnd = false
+local UpdateConnection
 
 local Player = Players.LocalPlayer
 local PlayerGui = Player.PlayerGui
 
-Cover.Parent = PlayerGui
 local Draft = {
     Cards = {}
 }
 
 local function endDraft(gui, playerNum)
-    gui.DraftFrame:Destroy()
-    gui.PickedFrame:Destroy()
-    gui.DraftInfo:Destroy()
+    if gui:FindFirstChild("DraftFrame") then
+        gui.DraftFrame:Destroy()
+    end
+    if gui:FindFirstChild("PickedFrame") then
+        gui.PickedFrame:Destroy()
+    end
+    if gui:FindFirstChild("DraftInfo") then
+        gui.DraftInfo:Destroy()
+    end
     local endFrame = gui.EndFrame
     local xIndex = 1 / (#Draft.Cards[playerNum] + 1)
     coroutine.wrap(function()
@@ -39,7 +44,6 @@ local function endDraft(gui, playerNum)
         end
     end)()
     GameStarted.Event:Wait()
-    Cover:Destroy()
     gui:Destroy()
 end
 
@@ -51,8 +55,8 @@ function Draft.updateDraftGui(gui, draftCards, pickPlayer, pickNum, nextTurn)
     table.insert(Draft.Cards[pickPlayer], pickedCard)
     local draftFrame = gui.DraftFrame
     local draftInfo = gui.DraftInfo
-    local pickedFrame = gui.PickedFrame
-    pickedFrame = Instance.new("Frame")
+    --local pickedFrame = gui.PickedFrame
+    --pickedFrame = Instance.new("Frame")
     draftInfo.Text = "player " .. pickPlayer .. " has picked " .. pickedCard
     local cardFrame = draftFrame:FindFirstChild(pickNum)
     local clone = cardFrame:Clone()
@@ -74,6 +78,9 @@ function Draft.updateDraftGui(gui, draftCards, pickPlayer, pickNum, nextTurn)
 end
 
 function Draft.draftBegin(draftCards, playerNum)
+    if UpdateConnection then
+        UpdateConnection:Disconnect()
+    end
     local draftGui = PlayerGuis.DraftGui:Clone()
     local draftCard = GuiAssets.DraftCard
     draftGui.Parent = PlayerGui
@@ -83,7 +90,7 @@ function Draft.draftBegin(draftCards, playerNum)
     local turn = 1
     local columns = 4
     local rows = math.ceil(#draftCards / columns)
-    local xIndex = 1 / (columns + 1)
+    local xIndex = 1 / (columns + 1) 
     local yIndex = 1 / (rows + 1)
     for row = 1, rows, 1 do
         local y = yIndex * row
@@ -97,10 +104,11 @@ function Draft.draftBegin(draftCards, playerNum)
             local clone = draftCard:Clone()
             clone.Parent = draftFrame
             clone.Name = cardI
-            clone.CardName.Text = card
+            clone.CardName.Text = require(Towers:FindFirstChild(card)).Name
             clone.Position = UDim2.new(x, 0, y, 0)
             clone.InputBegan:Connect(function(inputObj)
                 if inputObj.UserInputType == Enum.UserInputType.MouseButton1 and turn == playerNum then
+                    turn = 0
                     RemoteEvent:FireServer("DraftSelect", cardI)
                 end
             end)
@@ -108,9 +116,10 @@ function Draft.draftBegin(draftCards, playerNum)
     end
     draftInfo.Text = "player " .. turn .. "'s turn"
 
-    DraftUpdate.Event:Connect(function(type, pickPlayer, pickNum, nextTurn)
+    UpdateConnection = DraftUpdate.Event:Connect(function(type, pickPlayer, pickNum, nextTurn)
         if type == "Pick" then
             Draft.updateDraftGui(draftGui, draftCards, pickPlayer, pickNum, nextTurn)
+            draftCards[pickNum] = nil
             turn = nextTurn
         elseif type == "End" then
             task.wait(1)

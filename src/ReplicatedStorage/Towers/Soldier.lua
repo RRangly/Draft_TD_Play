@@ -6,35 +6,35 @@ local Soldier = {
             AttackSpeed = 0.5;
             AttackRange = 20;
             Damage = 2;
-            Cost = 150;
+            Cost = 100;
         },
         {
             LevelName = "Faster Reload";
             AttackSpeed = 0.4;
-            AttackRange = 20;
-            Damage = 2;
-            Cost = 80;
+            AttackRange = 24;
+            Damage = 3;
+            Cost = 200;
         },
         {
             LevelName = "Better Bullets";
-            AttackSpeed = 04;
-            AttackRange = 24;
-            Damage = 3;
+            AttackSpeed = 0.4;
+            AttackRange = 28;
+            Damage = 4;
             Cost = 250;
         },
         {
-            LevelName = "Glock 17";
-            AttackSpeed = 0.4;
+            LevelName = "AK-47";
+            AttackSpeed = 0.3;
             AttackRange = 30;
             Damage = 5;
-            Cost = 500;
+            Cost = 350;
         },
         {
-            LevelName = "Trained Gunner";
-            AttackSpeed = 0.3;
-            AttackRange = 45;
-            Damage = 5;
-            Cost = 900;
+            LevelName = "Trained Soldier";
+            AttackSpeed = 0.2;
+            AttackRange = 36;
+            Damage = 7;
+            Cost = 600;
         }
     };
     Placement = {

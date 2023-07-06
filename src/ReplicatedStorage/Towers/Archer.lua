@@ -56,7 +56,7 @@ function Archer.update(data, towerIndex, deltaTime)
     local towerManager = data.TowerManager
     local mobManager = data.MobManager
     local waypoints = data.MapManager.WayPoints
-    local player = data.Player
+    local clientLoad = data.ClientLoad
     local tower = towerManager.Towers[towerIndex]
     local stats = Archer.Stats[tower.Level]
     if towerManager:attackAvailable(towerIndex, mobManager.Mobs) then
@@ -74,7 +74,7 @@ function Archer.update(data, towerIndex, deltaTime)
         tower.AttackCD += deltaTime
         if tower.AttackCD >= stats.AttackSpeed then
             tower.AttackCD = 0
-            towerManager:playSound(player, "GunShot")
+            clientLoad:playSound("GunShot")
             local arrow = Instance.new("Part", Workspace)
             arrow.Size = Vector3.new(2, 2, 2)
             arrow.CFrame = CFrame.new(model:GetPivot().Position, mobPart.Position)
