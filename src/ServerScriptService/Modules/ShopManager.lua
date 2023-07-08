@@ -4,8 +4,7 @@ local Towers = ReplicatedStorage.Towers
 local Shop = {}
 Shop.__index = Shop
 
-function Shop:reRoll(coinManager, source)
-    print("Source", source)
+function Shop:reRoll(coinManager)
     local cost = math.floor(1.1 ^ self.ReRoll * 115)
     if coinManager.Coins >= cost then
         print("Coins", coinManager.Coins, cost)

@@ -134,7 +134,7 @@ function TowerManager:place(playerIndex, towerIndex, position)
     end
     --local tower = require(Towers:FindFirstChild(cards[towerIndex]))
     local placeTile = TowerManager:checkPlacementAvailable(chunks, card, position)
-        if placeTile then
+        if placeTile and #self.Towers < self.TowerLimit then
             placeTile.Occupied = true
             local clone = TowerModels:FindFirstChild(card):Clone()
             clone.Parent = WorkSpaceTower
@@ -207,6 +207,7 @@ function TowerManager.new(cards)
     local towers = {
         Cards = cards;
         Towers = {};
+        TowerLimit = 20;
     }
     setmetatable(towers, TowerManager)
     return towers

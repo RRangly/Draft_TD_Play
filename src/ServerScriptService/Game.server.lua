@@ -180,7 +180,7 @@ ManageShop.Event:Connect(function(player, manageType, ...)
                 RemoteEvent:FireClient(player, "Update", "ShopManager", data.ShopManager)
             elseif manageType == "ReRoll" then
                 print("CallReRoll")
-                data.ShopManager:reRoll(data.CoinManager, "GameServer")
+                data.ShopManager:reRoll(data.CoinManager)
                 RemoteEvent:FireClient(player, "Update", "ShopManager", data.ShopManager)
             elseif manageType == "Chunk" then
                 data.ShopManager:purchaseChunk(data.CoinManager, data.MapManager)
