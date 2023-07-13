@@ -19,6 +19,20 @@ local PlayerGui = Player.PlayerGui
 
 local CurrentGui
 
+local NotificationManager = {}
+
+function NotificationManager.new(text: string)
+    local notiFrame = CurrentGui.NotificationFrame
+    local notiText = PlayerGuiAssets.NotificationText:Clone()
+    notiText.Parent = notiFrame
+    notiText.Position = UDim2.new(0, 0, 0, 0)
+    notiText.Text = text
+    local tween = TweenService:Create(notiText, TweenInfo.new(2.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Position = UDim2.new(0, 0, 1, 0)})
+    tween:Play()
+    tween.Completed:Wait()
+    notiText:Destroy()
+end
+
 local TowerManager = {
     Selected = {}
 }
@@ -111,7 +125,7 @@ function TowerManager.updateSelection()
             if Data.Data.CoinManager.Coins >= upgradeStats.Cost then
                 RemoteEvent:FireServer("ManageTower", "Upgrade", towerIndex)
             else
-                print("Not Enough Money!", Data.Data.CoinManager.Coins)
+                NotificationManager.new("Too Expensive!")
             end
         end)
     else
@@ -152,6 +166,9 @@ function TowerManager.checkPlacementAvailable(towerType, block)
 end
 
 function TowerManager.startPlacement(tower, index)
+    if TowerManager.Placing and TowerManager.Placing.Model then
+        TowerManager.Placing.Model:Destroy()
+    end
     print("SP", tower, TowerManager)
     TowerManager.Placing = {
         Tower = tower;
@@ -162,19 +179,20 @@ end
 function TowerManager.placeTower()
     local placing = TowerManager.Placing
     local rayCast = TowerManager.RayCast
-
     if rayCast then
         local towerInfo = require(Towers:FindFirstChild(TowerManager.Placing.Tower))
         local chunkPos, tilePos = TowerManager.getTileCoord(rayCast.Part)
         local available = TowerManager.checkPlacementAvailable(towerInfo.Placement.Type, rayCast.Part)
         if available then
-            TowerManager.Placing = nil
+            if placing.Model then
+                placing.Model:Destroy()
+            end
             RemoteEvent:FireServer("PlaceTower", placing.TowerIndex, {Chunk = chunkPos; Tile = tilePos;})
+            TowerManager.Placing = nil
+            return
         end
     end
-    if placing.Model then
-        placing.Model:Destroy()
-    end
+    NotificationManager.new("Can't Place Here!")
 end
 
 function TowerManager.cancelPlacement()
@@ -306,13 +324,13 @@ end
 local WaveManager = {}
 
 function WaveManager.starting(wave)
-    local message = CurrentGui.WaveStartingMessage
-    message.Visible = true
+    local waveText = CurrentGui.WaveText
+    waveText.Visible = true
     for i = 10, 1, -1 do
-        message.Text = "Wave ".. wave .. " Starting in "..  i .. " seconds"
+        waveText.Text = "Wave ".. wave .. " Starting in "..  i .. " seconds"
         task.wait(1)
     end
-    message.Visible = false
+    waveText.Visible = false
 end
 
 function WaveManager.updateWave()
@@ -385,12 +403,14 @@ end
 function ShopManager.update()
     ShopManager.updateShop()
 end
+
 local HudManager = {
     BaseManager = BaseManager;
     TowerManager = TowerManager;
     WaveManager = WaveManager;
     CoinManager = CoinManager;
     ShopManager = ShopManager;
+    NotificationManager = NotificationManager;
 }
 
 function HudManager.start()

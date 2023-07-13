@@ -28,6 +28,9 @@ function GameMechanics.mobMovementPrediction(data, mobIndex, distance)
     local mobPlace
     repeat
         local waypoint = wayPoints[i]
+        if not waypoint then
+            return waypoint[i - 1]
+        end
         local waypointVector = Vector3.new(waypoint.X, 0, waypoint.Z)
         local waypointDistance = (waypointVector - mobVector).Magnitude
         if waypointDistance >= distance then

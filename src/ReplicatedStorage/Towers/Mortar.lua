@@ -75,9 +75,8 @@ function Mortar.playAnim(model, targetPos)
     ammoClone.CanCollide = false
     for _, point in pairs(points) do
         ammoClone.CFrame = CFrame.new(ammoClone.Position, point)
-        local tween  = TweenService:Create(ammoClone, TweenInfo.new(ShellSpeed / 19), {Position = point})
-        tween:Play()
-        tween.Completed:Wait()
+        task.wait(ShellSpeed / 19)
+        ammoClone.CFrame = CFrame.new(point)
     end
     ammoClone:Destroy()
 end
