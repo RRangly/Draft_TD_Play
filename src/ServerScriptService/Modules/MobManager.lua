@@ -21,7 +21,8 @@ function MobManager:Spawn(mobInfo)
     clone.Parent = MobFolder
     for _, part in pairs(clone:GetDescendants()) do
         if part:IsA("BasePart") then
-            part.CollisionGroup = "GameAssets"
+            part.CollisionGroup = "Mobs"
+            part.CanCollide = true
             part:SetNetworkOwner(nil)
         end
     end

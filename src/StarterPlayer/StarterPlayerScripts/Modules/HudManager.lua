@@ -78,8 +78,8 @@ function TowerManager.updateSelection()
     local rayCastParam = RaycastParams.new()
     rayCastParam.CollisionGroup = "Towers"
     local origin = Vector3.new(towerPosition.X, towerPosition.Y + 1, towerPosition.Z)
-    local ending = Vector3.new(towerPosition.X, towerPosition.Y - 3000, towerPosition.Z)
-    local ray = Workspace:Raycast(origin, ending, rayCastParam)
+    local direction = Vector3.new(0, -10, 0)
+    local ray = Workspace:Raycast(origin, direction, rayCastParam)
     local displayPos = Vector3.new(ray.Position.X, ray.Position.Y + 0.1, ray.Position.Z)
     TowerManager.Selected.RangeDisplay.Position = displayPos
     local tween = TweenService:Create(TowerManager.Selected.RangeDisplay, TweenInfo.new(0.5), {Size = Vector3.new(0.2, presentStats.AttackRange * 2, presentStats.AttackRange * 2)})
@@ -140,7 +140,7 @@ function TowerManager.mouseRayCast(collisionGroup)
     local ray = Camera:ViewportPointToRay(mousePosition.X, mousePosition.Y)
     local rayCastParam = RaycastParams.new()
     rayCastParam.CollisionGroup = collisionGroup
-    local rayResult = Workspace:Raycast(ray.Origin, ray.Direction * 100, rayCastParam)
+    local rayResult = Workspace:Raycast(ray.Origin, ray.Direction * 1000, rayCastParam)
     if rayResult then
         return {rayResult.Instance, rayResult.Position}
     else
@@ -148,19 +148,13 @@ function TowerManager.mouseRayCast(collisionGroup)
     end
 end
 
-function TowerManager.getTileCoord(block)
-    local pos = block.Position
-    local chunk = Vector2.new(math.floor(pos.X / 50), math.floor(pos.Z / 50))
-    local tile = Vector2.new(math.floor((pos.X - chunk.X * 50) / 5), math.floor((pos.Z - chunk.Y * 50) / 5))
-    return chunk, tile
-end
-
-function TowerManager.checkPlacementAvailable(towerType, block)
-    local tileType = block:GetAttribute("Type")
-    if tileType == towerType then
+function TowerManager.checkPlacementAvailable(towerType, position)
+    local start = Vector3.new(position.X, position.Y + 1, position.Z)
+    local rayCastParam = RaycastParams.new()
+    rayCastParam.CollisionGroup = "Towers"
+    local ray = Workspace:Raycast(start, Vector3.new(0, -10, 0), rayCastParam)
+    if ray and ray.Instance:GetAttribute("Placement") == towerType then
         return true
-    else
-        print("Type", tileType, towerType)
     end
     return false
 end
@@ -181,13 +175,12 @@ function TowerManager.placeTower()
     local rayCast = TowerManager.RayCast
     if rayCast then
         local towerInfo = require(Towers:FindFirstChild(TowerManager.Placing.Tower))
-        local chunkPos, tilePos = TowerManager.getTileCoord(rayCast.Part)
-        local available = TowerManager.checkPlacementAvailable(towerInfo.Placement.Type, rayCast.Part)
+        local available = TowerManager.checkPlacementAvailable(towerInfo.Placement.Type, rayCast.Position)
         if available then
             if placing.Model then
                 placing.Model:Destroy()
             end
-            RemoteEvent:FireServer("PlaceTower", placing.TowerIndex, {Chunk = chunkPos; Tile = tilePos;})
+            RemoteEvent:FireServer("PlaceTower", placing.TowerIndex, rayCast.Position)
             TowerManager.Placing = nil
             return
         end
@@ -256,7 +249,7 @@ RunService.RenderStepped:Connect(function()
     end
     if TowerManager.Placing then
         local towerInfo = require(Towers:FindFirstChild(TowerManager.Placing.Tower))
-        if rayCast and rayCast[1].CollisionGroup == "Tiles" then
+        if rayCast then
             if not TowerManager.Placing.Model then
                 print("ModelReplace")
                 local model = TowerModels:FindFirstChild(TowerManager.Placing.Tower):Clone()
@@ -273,9 +266,9 @@ RunService.RenderStepped:Connect(function()
                     end
                 end
             end
-            local chunkPos, tilePos = TowerManager.getTileCoord(rayCast[1])
-            placeable = TowerManager.checkPlacementAvailable(towerInfo.Placement.Type, rayCast[1])
-            TowerManager.Placing.Model:MoveTo(Vector3.new(chunkPos.X * 50 + tilePos.X * 5, 5, chunkPos.Y * 50 + tilePos.Y * 5))
+            placeable = TowerManager.checkPlacementAvailable(towerInfo.Placement.Type, TowerManager.RayCast.Position)
+            local pos = Vector3.new(TowerManager.RayCast.Position.X, TowerManager.RayCast.Position.Y + 5, TowerManager.RayCast.Position.Z)
+            TowerManager.Placing.Model:PivotTo(CFrame.new(pos))
             local model = TowerManager.Placing.Model
             for _, part in pairs(model:GetDescendants()) do
                 if part:IsA("BasePart") then

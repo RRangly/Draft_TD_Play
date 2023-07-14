@@ -9,7 +9,7 @@ local Archer = {
             AttackSpeed = 0.5;
             AttackRange = 25;
             Damage = 2;
-            ArrowSpeed = 28;
+            ArrowSpeed = 0.5;
             Cost = 400;
         },
         {
@@ -17,7 +17,7 @@ local Archer = {
             AttackSpeed = 0.5;
             AttackRange = 28;
             Damage = 3;
-            ArrowSpeed = 32;
+            ArrowSpeed = 0.4;
             Cost = 400;
         },
         {
@@ -25,7 +25,7 @@ local Archer = {
             AttackSpeed = 0.4;
             AttackRange = 36;
             Damage = 4;
-            ArrowSpeed = 40;
+            ArrowSpeed = 0.4;
             Cost = 400;
         },
         {
@@ -33,7 +33,7 @@ local Archer = {
             AttackSpeed = 0.3;
             AttackRange = 25;
             Damage = 4;
-            ArrowSpeed = 40;
+            ArrowSpeed = 0.3;
             Cost = 400;
         },
         {
@@ -41,7 +41,7 @@ local Archer = {
             AttackSpeed = 0.5;
             AttackRange = 25;
             Damage = 5;
-            ArrowSpeed = 48;
+            ArrowSpeed = 0.2;
             Cost = 400;
         }
     };
@@ -80,10 +80,16 @@ function Archer.update(data, towerIndex, deltaTime)
             arrow.CFrame = CFrame.new(model:GetPivot().Position, mobPart.Position)
             arrow.CanCollide = false
             local direction = (mobPart.Position - arrow.Position).Unit
-            local tweenTime = stats.AttackRange / stats.ArrowSpeed
-            local arrowTween = TweenService:Create(arrow, TweenInfo.new(tweenTime), {CFrame = arrow.CFrame + direction * stats.AttackRange})
-            arrowTween:Play()
-            local alreadyHit = {}
+            --local tweenTime = stats.AttackRange / stats.ArrowSpeed
+            for i = 1, stats.AttackRange, 1 do
+                print("Dir", direction)
+                arrow.Position = arrow.Position + direction
+                task.wait(stats.ArrowSpeed / stats.AttackRange)
+            end
+            --local arrowTween = TweenService:Create(arrow, TweenInfo.new(tweenTime), {Position = arrow.Position + direction * stats.AttackRange})
+            --arrowTween:Play()
+            --local alreadyHit = {}
+            --[[
             arrow.Touched:Connect(function(otherPart)
                 if otherPart.CollisionGroup == "GameAssets" then
                     for _, i in alreadyHit do
@@ -103,7 +109,8 @@ function Archer.update(data, towerIndex, deltaTime)
                     end
                 end
             end)
-            arrowTween.Completed:Wait()
+            ]]
+            --arrowTween.Completed:Wait()
             arrow:Destroy()
         end
     else

@@ -34,11 +34,6 @@ function Game.runUpdate(playerIndex, deltaTime)
     local towerManager = data.TowerManager
     local mobManager = data.MobManager
     local player = data.Player
-    for i, ti in pairs(towerManager.Towers) do
-        local tower = require(Towers:FindFirstChild(ti.Name))
-        --tower.update(player, towerManager, i, mobManager, data.Map.WayPoints, deltaTime)
-        tower.update(data, i, deltaTime)
-    end
     for i, mob in pairs(mobManager.Mobs) do
         local hum = mob.Object:FindFirstChild("Humanoid")
         if not hum or hum.Health <= 0 then
@@ -60,6 +55,11 @@ function Game.runUpdate(playerIndex, deltaTime)
                 end
             end)
         end
+    end
+    for i, ti in pairs(towerManager.Towers) do
+        local tower = require(Towers:FindFirstChild(ti.Name))
+        --tower.update(player, towerManager, i, mobManager, data.Map.WayPoints, deltaTime)
+        tower.update(data, i, deltaTime)
     end
 end
 
@@ -110,8 +110,9 @@ function Game.singlePlayer(player)
     Draft.megadraft({player})
     local draft = DraftEnd.Event:Wait()
     Data[1].TowerManager = TowerManager.new(draft[1])
-    Data[1].MapManager = MapGenerator.generateMap()
-    Data[1].MapManager:generateChunk()
+    --Data[1].MapManager = MapGenerator.generateMap()
+    --Data[1].MapManager:generateChunk()
+    Data[1].MapManager = MapManager.load("Forest_Camp", Vector3.new(0, 0, 0 ))
     Data[1].BaseManager = BaseManager.new()
     Data[1].MobManager = MobManager.new()
     Data[1].CoinManager = CoinManager.new()
@@ -120,12 +121,12 @@ function Game.singlePlayer(player)
     Data[1].ShopManager:reRollNoCost()
     Data[1].ClientLoad = ClientLoad.new(player)
     task.wait(5)
-    player.Character:MoveTo(Vector3.new(25, 5, 25))
+    player.Character:MoveTo(Vector3.new(Data[1].MapManager.PlayerSpawn))
     RemoteEvent:FireClient(player, "GameStarted", Data[1])
     RemoteEvent:FireClient(player, "WaveReady", Data[1].MobManager.CurrentWave + 1)
     RemoteEvent:FireClient(player, "WaveStart", Data[1].MobManager.CurrentWave)
     player.CharacterAdded:Connect(function()
-        player.Character:MoveTo(Vector3.new(25, 5, 25))
+        player.Character:MoveTo(Vector3.new(Data[1].MapManager.PlayerSpawn))
     end)
     local updateTime = 0
     RunService.Heartbeat:Connect(function(deltaTime)
@@ -150,9 +151,9 @@ GameLoaded.Event:Connect(function(player)
 end)
 
 PlaceTower.Event:Connect(function(player, towerName, position)
-    for i, data in pairs(Data) do
+    for _, data in pairs(Data) do
         if data.Player == player then
-            local placed = data.TowerManager:place(i, towerName, position)
+            local placed = data.TowerManager:place(towerName, position)
             if placed then
                 RemoteEvent:FireClient(player, "Update", "TowerManager", data.TowerManager)
             end

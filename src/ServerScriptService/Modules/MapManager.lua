@@ -27,16 +27,13 @@ function MapManager.load(mapName, origin)
 
     for _, part in pairs(clone:GetDescendants()) do
         if part:IsA("BasePart") then
-            part.CollisionGroup = "GameMap"
+            --part.CollisionGroup = "GameMap"
             local pos = part.Position
             part.Position = Vector3.new(pos.X + origin.X, pos.Y + origin.Y, pos.Z + origin.Z)
         end
     end
 
     Settings.CurrentMap = mapName
-    for _, player in pairs(Players:GetPlayers()) do
-        player.Character:MoveTo(map.PlayerSpawn)
-    end
     return map
 end
 

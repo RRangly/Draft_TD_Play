@@ -1,3 +1,4 @@
+local Workspace = game:GetService("Workspace")
 local GameMechanics = {}
 
 function GameMechanics.create(p0: Vector3, p1: Vector3)
