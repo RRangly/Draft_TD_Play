@@ -28,6 +28,7 @@ function TowerManager:place(towerIndex, position)
     end
     local towerInfo = require(Towers:FindFirstChild(cards[towerIndex]))
     local placeAble = TowerManager:checkPlacementAvailable(towerInfo.Placement.Type, position)
+    print("Placeable", placeAble)
     if placeAble and #self.Towers < self.TowerLimit then
         local clone = TowerModels:FindFirstChild(card):Clone()
         clone.Parent = WorkSpaceTower

@@ -72,13 +72,21 @@ end)
 UserInputService.InputBegan:Connect(function(inputObj)
     local placing = HudManager.TowerManager.Placing
     if inputObj.KeyCode == Enum.KeyCode.F and placing then
-        HudManager.TowerManager.cancelPlacement()
+        HudManager.TowerManager.endPlacement()
     end
     local mouseLocation = UserInputService:GetMouseLocation()
     local frames = PlayerGui:GetGuiObjectsAtPosition(mouseLocation.X, mouseLocation.Y - 36)
-    if #frames == 0 then
+    local clickThrough = true
+    for _, frame in pairs(frames) do
+        if not frame:GetAttribute("ClickThrough") then
+            clickThrough = false
+        end
+    end
+    if clickThrough then
         if inputObj.UserInputType == Enum.UserInputType.MouseButton1 then
+            print("Clicked")
             if placing then
+                print("Place")
                 HudManager.TowerManager.placeTower()
             else
                 HudManager.TowerManager.selectTower(Data.Data.TowerManager.Towers)

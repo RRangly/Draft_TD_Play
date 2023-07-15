@@ -17,6 +17,7 @@ local Camera = Workspace.CurrentCamera
 local Player = Players.LocalPlayer
 local PlayerGui = Player.PlayerGui
 
+
 local CurrentGui
 
 local NotificationManager = {}
@@ -160,6 +161,22 @@ function TowerManager.checkPlacementAvailable(towerType, position)
 end
 
 function TowerManager.startPlacement(tower, index)
+    local towerInfo = require(Towers:FindFirstChild(tower))
+    local highLights = Workspace.Map:GetChildren()[1].HighLights
+    for _, obj in pairs(highLights:GetChildren()) do
+        obj.FillTransparency = 1
+        obj.OutlineTransparency = 1
+        obj.Enabled = true
+        local fillT = 0.5
+        if obj.Name == towerInfo.Placement.Type then
+            obj.FillColor = Color3.fromRGB(0, 255, 0)
+            fillT = 0.3
+        else
+            obj.FillColor = Color3.fromRGB(255, 0, 0)
+        end
+        local tween = TweenService:Create(obj, TweenInfo.new(0.5), {FillTransparency = fillT; OutlineTransparency = 0;})
+        tween:Play()
+    end
     if TowerManager.Placing and TowerManager.Placing.Model then
         TowerManager.Placing.Model:Destroy()
     end
@@ -170,30 +187,39 @@ function TowerManager.startPlacement(tower, index)
     }
 end
 
+function TowerManager.endPlacement()
+    local highLights = Workspace.Map:GetChildren()[1].HighLights
+    for _, obj in pairs(highLights:GetChildren()) do
+        task.spawn(function()
+            local tween = TweenService:Create(obj, TweenInfo.new(0.5), {FillTransparency = 1; OutlineTransparency = 1;})
+            tween:Play()
+            tween.Completed:Wait()
+            obj.Enabled = false
+        end)
+    end
+    if TowerManager.Placing.Model then
+        TowerManager.Placing.Model:Destroy()
+    end
+    TowerManager.Placing = nil
+end
+
 function TowerManager.placeTower()
     local placing = TowerManager.Placing
     local rayCast = TowerManager.RayCast
     if rayCast then
+        print("Raycast")
         local towerInfo = require(Towers:FindFirstChild(TowerManager.Placing.Tower))
         local available = TowerManager.checkPlacementAvailable(towerInfo.Placement.Type, rayCast.Position)
         if available then
-            if placing.Model then
-                placing.Model:Destroy()
-            end
+            print("available")
             RemoteEvent:FireServer("PlaceTower", placing.TowerIndex, rayCast.Position)
-            TowerManager.Placing = nil
+            TowerManager.endPlacement()
             return
+        else
+            print("NotAvail", TowerManager)
         end
     end
     NotificationManager.new("Can't Place Here!")
-end
-
-function TowerManager.cancelPlacement()
-    local placing = TowerManager.Placing
-    if placing.Model then
-        placing.Model:Destroy()
-    end
-    TowerManager.Placing = nil
 end
 
 function TowerManager.selectTower(towerManager)
