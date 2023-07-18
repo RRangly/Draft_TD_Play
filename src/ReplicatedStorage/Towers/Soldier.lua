@@ -40,6 +40,7 @@ local Soldier = {
     Placement = {
         Area = 1;
         Type = "Plain";
+        Height = 4.45;
     }
 }
 

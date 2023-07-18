@@ -149,12 +149,17 @@ function TowerManager.mouseRayCast(collisionGroup)
     end
 end
 
-function TowerManager.checkPlacementAvailable(towerType, position)
+function TowerManager.checkPlacementAvailable(towerType, part)
+    --[[
     local start = Vector3.new(position.X, position.Y + 1, position.Z)
     local rayCastParam = RaycastParams.new()
     rayCastParam.CollisionGroup = "Towers"
     local ray = Workspace:Raycast(start, Vector3.new(0, -10, 0), rayCastParam)
     if ray and ray.Instance:GetAttribute("Placement") == towerType then
+        return ray.Position
+    end
+    ]]
+    if part:GetAttribute("Placement") == towerType then
         return true
     end
     return false
@@ -209,8 +214,8 @@ function TowerManager.placeTower()
     if rayCast then
         print("Raycast")
         local towerInfo = require(Towers:FindFirstChild(TowerManager.Placing.Tower))
-        local available = TowerManager.checkPlacementAvailable(towerInfo.Placement.Type, rayCast.Position)
-        if available then
+        local placeable = TowerManager.checkPlacementAvailable(towerInfo.Placement.Type, rayCast.Part)
+        if placeable then
             print("available")
             RemoteEvent:FireServer("PlaceTower", placing.TowerIndex, rayCast.Position)
             TowerManager.endPlacement()
@@ -265,7 +270,6 @@ end
 
 RunService.RenderStepped:Connect(function()
     local rayCast = TowerManager.mouseRayCast("Towers")
-    local placeable
     if rayCast then
         TowerManager.RayCast = {}
         TowerManager.RayCast.Part = rayCast[1]
@@ -292,8 +296,8 @@ RunService.RenderStepped:Connect(function()
                     end
                 end
             end
-            placeable = TowerManager.checkPlacementAvailable(towerInfo.Placement.Type, TowerManager.RayCast.Position)
-            local pos = Vector3.new(TowerManager.RayCast.Position.X, TowerManager.RayCast.Position.Y + 5, TowerManager.RayCast.Position.Z)
+            local placeable = TowerManager.checkPlacementAvailable(towerInfo.Placement.Type, TowerManager.RayCast.Part)
+            local pos = Vector3.new(TowerManager.RayCast.Position.X, TowerManager.RayCast.Position.Y + towerInfo.Placement.Height, TowerManager.RayCast.Position.Z)
             TowerManager.Placing.Model:PivotTo(CFrame.new(pos))
             local model = TowerManager.Placing.Model
             for _, part in pairs(model:GetDescendants()) do
@@ -340,7 +344,33 @@ end
 function BaseManager.update()
     BaseManager.updateBaseHp()
 end
+
 local WaveManager = {}
+
+function WaveManager.arrowBlink()
+    local arrows = Workspace.Map:GetChildren()[1].Arrows:GetChildren()
+    task.spawn(function()
+        local transparency = 0;
+        local tway = -0.05;
+        local passed = 0
+        repeat
+            if transparency <= -0.2 then
+                tway = 0.05
+            elseif transparency >= 1.3 then
+                tway = -0.1
+            end
+            transparency += tway
+            for _, obj in pairs(arrows) do
+                obj.Transparency = transparency
+            end
+            task.wait(0.05)
+            passed += 1
+        until passed > 199
+        for _, obj in pairs(arrows) do
+            obj.Transparency = 1
+        end
+    end)
+end
 
 function WaveManager.starting(wave)
     local waveText = CurrentGui.WaveText

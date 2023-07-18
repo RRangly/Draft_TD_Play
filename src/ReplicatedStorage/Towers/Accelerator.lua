@@ -45,6 +45,7 @@ local Accelerator = {
     Placement = {
         Area = 1;
         Type = "Plain";
+        Height = 2.9;
     }
 }
 

@@ -33,6 +33,7 @@ local function startGame(data)
     HudManager.WaveManager.update()
     HudManager.CoinManager.update()
     HudManager.ShopManager.update()
+    HudManager.WaveManager.arrowBlink()
 end
 
 local draftCards, playerNum = DraftBegin.Event:Wait()

@@ -116,11 +116,6 @@ function MobManager:startMovement(wayPoints, mobIndex)
 
     local deathConnection = humanoid.Died:Once(function()
         moveConnection:Disconnect()
-        for index, hum in pairs(self.CurrentMoving) do
-            if humanoid == hum then
-                table.remove(self.CurrentMoving, index)
-            end
-        end
         healthReduction = 0
     end)
     repeat

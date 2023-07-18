@@ -53,6 +53,7 @@ local Mortar = {
     Placement = {
         Area = 1;
         Type = "Cliff";
+        Height = 0.12;
     }
 }
 

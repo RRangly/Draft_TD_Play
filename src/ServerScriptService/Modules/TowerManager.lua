@@ -41,7 +41,8 @@ function TowerManager:place(towerIndex, position)
                 part.CollisionGroup = "Towers"
             end
         end
-        clone:MoveTo(position)
+        local place = Vector3.new(position.X, position.Y + towerInfo.Placement.Height, position.Z)
+        clone:PivotTo(CFrame.new(place))
         table.insert(self.Towers, {
             Name = card;
             Model = clone;

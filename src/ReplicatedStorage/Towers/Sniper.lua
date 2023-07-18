@@ -53,6 +53,7 @@ local Sniper = {
     Placement = {
         Area = 1;
         Type = "Cliff";
+        Height = 1.9;
     }
 }
 

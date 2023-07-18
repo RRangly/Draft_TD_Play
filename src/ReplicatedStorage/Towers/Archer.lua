@@ -48,6 +48,7 @@ local Archer = {
     Placement = {
         Area = 1;
         Type = "Plain";
+        Height = 2.3;
     }
 }
 
@@ -79,11 +80,10 @@ function Archer.update(data, towerIndex, deltaTime)
             arrow.Size = Vector3.new(2, 2, 2)
             arrow.CFrame = CFrame.new(model:GetPivot().Position, mobPart.Position)
             arrow.CanCollide = false
+            arrow.Anchored = true
             local direction = (mobPart.Position - arrow.Position).Unit
-            --local tweenTime = stats.AttackRange / stats.ArrowSpeed
             for i = 1, stats.AttackRange, 1 do
-                print("Dir", direction)
-                arrow.Position = arrow.Position + direction
+                arrow.Position = arrow.Position + direction * i
                 task.wait(stats.ArrowSpeed / stats.AttackRange)
             end
             --local arrowTween = TweenService:Create(arrow, TweenInfo.new(tweenTime), {Position = arrow.Position + direction * stats.AttackRange})

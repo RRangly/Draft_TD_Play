@@ -68,7 +68,7 @@ function Game.start(players)
         Data[i] = {}
     end
     Draft.startDraft(players)
-    local draft = DraftEnd.Event:Wait(0)
+    local draft = DraftEnd.Event:Wait()
     for i = 1, 2, 1 do
         Data[i].Player = players[i]
         Data[i].Towers = TowerManager.new(draft[i])

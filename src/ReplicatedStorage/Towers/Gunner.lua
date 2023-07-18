@@ -40,6 +40,7 @@ local Gunner = {
     Placement = {
         Area = 1;
         Type = "Plain";
+        Height = 3;
     }
 }
 

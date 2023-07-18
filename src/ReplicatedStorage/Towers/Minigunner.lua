@@ -53,6 +53,7 @@ local Minigunner = {
     Placement = {
         Area = 1;
         Type = "Plain";
+        Height = 3.01
     }
 }
 
