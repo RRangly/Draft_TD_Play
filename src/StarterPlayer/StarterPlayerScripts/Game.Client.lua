@@ -85,9 +85,7 @@ UserInputService.InputBegan:Connect(function(inputObj)
     end
     if clickThrough then
         if inputObj.UserInputType == Enum.UserInputType.MouseButton1 then
-            print("Clicked")
             if placing then
-                print("Place")
                 HudManager.TowerManager.placeTower()
             else
                 HudManager.TowerManager.selectTower(Data.Data.TowerManager.Towers)

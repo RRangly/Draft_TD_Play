@@ -46,17 +46,17 @@ function TowerManager.statChange(textLabel, index, statName, present, upgrade)
     textLabel.Text = statName .. ": " .. present .. " -> " .. upgrade
 end
 
-function TowerManager.updateSelection()
+function TowerManager.updateSelection(towerIndex)
     local towers = Data.Data.TowerManager.Towers
-    local towerIndex = TowerManager.Selected.Index
-
-    if TowerManager.Selected.RangeDisplay then
-        local part = TowerManager.Selected.RangeDisplay
-        local tween = TweenService:Create(part, TweenInfo.new(0.5), {Size = Vector3.new(0.2, 0, 0)})
-        tween:Play()
-        tween.Completed:Once(function()
-            part:Destroy()
-        end)
+    if TowerManager.Selected.Index ~= towerIndex then
+        local rangeDisplay = TowerManager.Selected.RangeDisplay
+        if rangeDisplay then
+            local tween = TweenService:Create(TowerManager.Selected.RangeDisplay, TweenInfo.new(0.5), {Size = Vector3.new(0.2, 0, 0)})
+            tween:Play()
+            tween.Completed:Once(function()
+                rangeDisplay:Destroy()
+            end)
+        end
     end
     if TowerManager.SelectFrame then
         TowerManager.SelectFrame:Destroy()
@@ -70,21 +70,17 @@ function TowerManager.updateSelection()
     clone.Parent = CurrentGui
     local tower = towers[towerIndex]
     local towerInfo = require(Towers:FindFirstChild(tower.Name))
-
     local presentStats = towerInfo.Stats[tower.Level]
 
-    TowerManager.Selected.RangeDisplay = ClientAssets.TowerRangeDisplay:Clone()
-    TowerManager.Selected.RangeDisplay.Parent = Workspace
-    local towerPosition = tower.Model:GetPivot().Position
-    local rayCastParam = RaycastParams.new()
-    rayCastParam.CollisionGroup = "Towers"
-    local origin = Vector3.new(towerPosition.X, towerPosition.Y + 1, towerPosition.Z)
-    local direction = Vector3.new(0, -10, 0)
-    local ray = Workspace:Raycast(origin, direction, rayCastParam)
-    local displayPos = Vector3.new(ray.Position.X, ray.Position.Y + 0.1, ray.Position.Z)
-    TowerManager.Selected.RangeDisplay.Position = displayPos
-    local tween = TweenService:Create(TowerManager.Selected.RangeDisplay, TweenInfo.new(0.5), {Size = Vector3.new(0.2, presentStats.AttackRange * 2, presentStats.AttackRange * 2)})
-    tween:Play()
+    if TowerManager.Selected.Index ~= towerIndex then
+        TowerManager.Selected.RangeDisplay = ClientAssets.TowerRangeDisplay:Clone()
+        TowerManager.Selected.RangeDisplay.Parent = tower.Model
+        local towerPosition = tower.Model:GetPivot().Position
+        local displayPos = Vector3.new(towerPosition.X, towerPosition.Y - towerInfo.Placement.Height + 0.1, towerPosition.Z)
+        TowerManager.Selected.RangeDisplay.Position = displayPos
+        local tween = TweenService:Create(TowerManager.Selected.RangeDisplay, TweenInfo.new(0.5), {Size = Vector3.new(presentStats.AttackRange * 2, 0.001, presentStats.AttackRange * 2)})
+        tween:Play()
+    end
 
     local present = clone.Present
     local towerLevel = present.TowerLevel
@@ -134,6 +130,7 @@ function TowerManager.updateSelection()
         nextLevel.Text = tower.Level
         upgradeButton.Text = "Maxed!"
     end
+    TowerManager.Selected.Index = towerIndex
 end
 
 function TowerManager.mouseRayCast(collisionGroup)
@@ -185,7 +182,6 @@ function TowerManager.startPlacement(tower, index)
     if TowerManager.Placing and TowerManager.Placing.Model then
         TowerManager.Placing.Model:Destroy()
     end
-    print("SP", tower, TowerManager)
     TowerManager.Placing = {
         Tower = tower;
         TowerIndex = index
@@ -212,16 +208,12 @@ function TowerManager.placeTower()
     local placing = TowerManager.Placing
     local rayCast = TowerManager.RayCast
     if rayCast then
-        print("Raycast")
         local towerInfo = require(Towers:FindFirstChild(TowerManager.Placing.Tower))
         local placeable = TowerManager.checkPlacementAvailable(towerInfo.Placement.Type, rayCast.Part)
         if placeable then
-            print("available")
             RemoteEvent:FireServer("PlaceTower", placing.TowerIndex, rayCast.Position)
             TowerManager.endPlacement()
             return
-        else
-            print("NotAvail", TowerManager)
         end
     end
     NotificationManager.new("Can't Place Here!")
@@ -233,28 +225,23 @@ function TowerManager.selectTower(towerManager)
         for i, tower in pairs(towerManager) do
             local model = rayCast[1]:IsDescendantOf(tower.Model)
             if model then
-                TowerManager.Selected.Index = i;
-                print("Selected", TowerManager.Selected)
-                TowerManager.updateSelection()
+                TowerManager.updateSelection(i)
                 return TowerManager.Selected
             end
         end
     end
-    TowerManager.Selected.Index = nil
-    TowerManager.updateSelection()
+    TowerManager.updateSelection(nil)
 end
 
 function TowerManager.updateCards()
     local cards = Data.Data.TowerManager.Cards
     CurrentGui.TowersFrame:ClearAllChildren()
-    local xInterval = 1 / (#cards + 1)
     for i, tower in pairs(cards) do
         local towerInfo = require(Towers:FindFirstChild(tower))
         local frame = PlayerGuiAssets.TowerFrame:Clone()
         frame.Parent = CurrentGui.TowersFrame
-        frame.Position = UDim2.new(xInterval * i, 0, 0, 0)
+        frame.Position = UDim2.new(0.09 * (i - 1) + 0.01, 0, 0.5, 0)
         frame.TowerName.Text = towerInfo.Name
-        frame.CostLabel.Text = towerInfo.Stats[1].Cost
         frame.InputBegan:Connect(function(inputObj)
             if inputObj.UserInputType == Enum.UserInputType.MouseButton1 then
                 TowerManager.startPlacement(tower, i)
@@ -264,7 +251,8 @@ function TowerManager.updateCards()
 end
 
 function TowerManager.update()
-    TowerManager.updateSelection()
+    print("Update", TowerManager.Selected.Index)
+    TowerManager.updateSelection(TowerManager.Selected.Index)
     TowerManager.updateCards()
 end
 
