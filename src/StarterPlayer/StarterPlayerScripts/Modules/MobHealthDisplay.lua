@@ -9,70 +9,70 @@ local PlayerChar = Player.Character or Player.CharacterAdded:Wait()
 local playerRootPart = PlayerChar:WaitForChild("HumanoidRootPart")
 local camera = Workspace.CurrentCamera
 
-local MobHealthDisplay = {}
+local MobHealthDisplay = {
+    Displays = {}
+}
+MobHealthDisplay.__index = MobHealthDisplay
 
-local function displayHealthBar(humanoid)
-    local char = humanoid.Parent
-    local maxHealth = humanoid.MaxHealth
-    local health = humanoid.Health
-    local head = char.Head
-    local guiClone = HealthDisplayGui:Clone()
-    guiClone.Parent = head
-    guiClone.Name = "HealthDisplayGui"
-    local guis = {guiClone.FrontGui, guiClone.BackGui}
-    for _, gui in pairs(guis) do
-        gui.HealthBar.Bar.Size = UDim2.new(health / maxHealth, 0, 1, 0)
-        gui.HumanoidHealthText.Text = health .. " / " .. maxHealth
+function MobHealthDisplay:updateDisplay(mob)
+    local gui = self.Gui
+    local sides = {gui.FrontGui, gui.BackGui}
+    for _, side in pairs(sides) do
+        side.HealthBar.Bar.Size = UDim2.new(mob.Health / mob.MaxHealth, 0, 1, 0)
+        side.HealthText.Text = mob.Health .. " / " .. mob.MaxHealth
     end
-    
-    local updateGUI = RunService.Heartbeat:Connect(function()
+end
+
+function MobHealthDisplay.display(mob)
+    local display = {
+        Char = mob.Object;
+        Gui = HealthDisplayGui:Clone();
+    }
+    setmetatable(display, MobHealthDisplay)
+    local maxHealth = mob.MaxHealth
+    local health = mob.Health
+    local head = display.Char.Head
+    local gui = display.Gui
+    gui.Parent = head
+    gui.Name = "HealthDisplayGui"
+    local sides = {gui.FrontGui, gui.BackGui}
+    for _, side in pairs(sides) do
+        side.HealthBar.Bar.Size = UDim2.new(health / maxHealth, 0, 1, 0)
+        side.HealthText.Text = health .. " / " .. maxHealth
+    end
+    local updateGUI
+    updateGUI = RunService.Heartbeat:Connect(function()
+        if not display.Char then
+            updateGUI:Disconnect()
+        end
         local headPosition = head.Position
-        guiClone.CFrame = CFrame.new(Vector3.new(headPosition.X, headPosition.Y + 2, headPosition.Z), camera.CFrame.Position)
+        gui.CFrame = CFrame.new(Vector3.new(headPosition.X, headPosition.Y + 2, headPosition.Z), camera.CFrame.Position)
     end)
-
-    local healthUpdate = humanoid.HealthChanged:Connect(function()
-        if not guiClone then
-            return
-        end
-        health = humanoid.Health
-        for _, gui in pairs(guis) do
-            if gui:FindFirstChild("HealthBar") then
-                gui.HealthBar.Bar.Size = UDim2.new(health / maxHealth, 0, 1, 0)
-            end
-            if gui:FindFirstChild("HumanoidHealthText") then
-                gui.HumanoidHealthText.Text = health .. " / " .. maxHealth
-            end
-        end
-    end)
-
-    humanoid.Died:Once(function()
-        updateGUI:Disconnect()
-        healthUpdate:Disconnect()
-        guiClone:Destroy()
-    end)
+    return display
 end
 
 function MobHealthDisplay.update(mobs)
-    for _, mob in pairs(mobs) do
-        local humanoid = mob.Object:FindFirstChild("Humanoid")
-        if not humanoid then
-            continue
-        end
-        if humanoid:IsA("Humanoid") and humanoid.Parent ~= game.Players.LocalPlayer.Character then
-            local char = humanoid.Parent
-            local head = char.Head
-            if (humanoid.RootPart.CFrame.Position - playerRootPart.CFrame.Position).Magnitude <= 60 then
-                if head:FindFirstChild("HealthDisplayGui") then
-                    continue
-                end
-                displayHealthBar(humanoid)
-            else
-                if head:FindFirstChild("HealthDisplayGui") then
-                    head.HealthDisplayGui:Destroy()
-                end
+    local toRemove = {}
+    for i, display in pairs(MobHealthDisplay.Displays) do
+        local match = false
+        for _, mob in pairs(mobs) do
+            if mob.Object == display.Char then
+                display:updateDisplay(mob)
+                match = true
             end
+        end
+        if not match then
+            table.insert(toRemove, i)
+        end
+    end
+    for i = #toRemove, 1, -1 do
+        table.remove(MobHealthDisplay.Displays, toRemove[i])
+    end
+    for _, mob in pairs(mobs) do
+        if not mob.Object.Head:FindFirstChild("HealthDisplayGui") then
+           table.insert(MobHealthDisplay.Displays,  MobHealthDisplay.display(mob))
         end
     end
 end
- 
+
 return MobHealthDisplay

@@ -105,11 +105,7 @@ function TowerManager:attackAvailable(towerIndex, mobs)
     local towerVector = Vector3.new(towerPart.Position.X, 0, towerPart.Position.Z)
 
     for _, mob in pairs(mobs) do
-        local mobPart = mob.Object.PrimaryPart
-        if not mobPart then
-            continue
-        end
-        local mobVector = Vector3.new(mobPart.Position.X, 0, mobPart.Position.Z)
+        local mobVector = mob.Position
         local mobDistance = (mobVector - towerVector).Magnitude
         if mobDistance < range then
             return true
@@ -127,9 +123,7 @@ function TowerManager:findClosestMob(towerIndex, mobs)
     local closestMob = nil
     local closestDistance = towerInfo.Stats[tower.Level].AttackRange
     for i, mob in pairs(mobs) do
-        local mobPart = mob.Object.PrimaryPart
-        if not mobPart then continue end
-        local mobVector = Vector3.new(mobPart.Position.X, 0, mobPart.Position.Z)
+        local mobVector = mob.Position
         local mobDistance = (mobVector - towerVector).Magnitude
         if mobDistance < closestDistance then
             closestMob = i
@@ -149,11 +143,8 @@ function TowerManager:findLowestHealth(towerIndex, mobs)
     local lowestHealthMob = nil
     local lowestHealth = math.huge
     for i, mob in pairs(mobs) do
-        local mobPart = mob.Object.PrimaryPart
-        if not mobPart then continue end
-        local mobVector = Vector3.new(mobPart.Position.X, 0, mobPart.Position.Z)
-        local humanoid = mob.Object.Humanoid
-        local mobHealth = humanoid.Health
+        local mobVector = mob.Position
+        local mobHealth = mob.Health
         local mobDistance = (mobVector - towerVector).Magnitude
         if mobDistance < range and mobHealth < lowestHealth then
             lowestHealthMob = i
@@ -173,9 +164,7 @@ function TowerManager:findFirstMob(towerIndex, mobs, waypoints)
     local FirstWaypoint = 0
     local FirstDistance = 0
     for i, mob in pairs(mobs) do
-        local mobPart = mob.Object.PrimaryPart
-        if not mobPart then continue end
-        local mobVector = Vector3.new(mobPart.Position.X, 0, mobPart.Position.Z)
+        local mobVector = mob.Position
         local mobDistance = (mobVector - towerVector).Magnitude
         if mobDistance < range then
             if mob.Waypoint >= FirstWaypoint then

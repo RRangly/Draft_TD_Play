@@ -99,7 +99,7 @@ function Mortar.update(data, towerIndex, deltaTime)
             target = towerManager:findFirstMob(towerIndex, mobManager.Mobs, waypoints)
         end
         local model = tower.Model
-        local targetPos = GameMechanics.mobMovementPrediction(data, target, mobManager.Mobs[target].Object.Humanoid.WalkSpeed * ShellSpeed)
+        local targetPos = GameMechanics.mobMovementPrediction(mobManager.Mobs[target], waypoints, mobManager.Mobs[target].WalkSpeed * ShellSpeed).Position
         model:PivotTo(CFrame.new(model:GetPivot().Position, Vector3.new(targetPos.X, model:GetPivot().Position.Y, targetPos.Z)))
         tower.AttackCD += deltaTime
         if tower.AttackCD >= stats.AttackSpeed then

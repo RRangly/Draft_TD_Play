@@ -1,24 +1,22 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
 --local Mobs = ReplicatedStorage.Mobs
 local MobModels = ReplicatedStorage.MobModels
+local GameMechanics = require(ReplicatedStorage.Game.GameMechanics)
 local MobFolder = Workspace.Mobs
 
 local MobManager = {}
 MobManager.__index = MobManager
 
-function MobManager:Spawn(mobInfo)
+function MobManager:Spawn(waypoints, mobInfo)
     local model = MobModels:FindFirstChild(mobInfo.Model)
-
     local clone = model:Clone()
     local humanoid = clone.Humanoid
-
     humanoid.WalkSpeed = mobInfo.WalkSpeed
-    humanoid.MaxHealth = mobInfo.MaxHealth
-    humanoid.Health = mobInfo.MaxHealth
-
     clone.Parent = MobFolder
+
     for _, part in pairs(clone:GetDescendants()) do
         if part:IsA("BasePart") then
             part.CollisionGroup = "Mobs"
@@ -27,14 +25,30 @@ function MobManager:Spawn(mobInfo)
         end
     end
 
-    local mobData = {
+    clone:MoveTo(waypoints[1])
+    local mob = {
         Object = clone;
         MobName = "Zombie";
+        WalkSpeed = mobInfo.WalkSpeed;
         MaxHealth = mobInfo.MaxHealth;
         Health = mobInfo.MaxHealth;
+        Waypoint = 2;
+        Position = waypoints[1];
+        Completed = false
     }
-    setmetatable(mobData, MobManager)
-    table.insert(self.Mobs, mobData)
+    local i = 2
+    humanoid:MoveTo(waypoints[i])
+    humanoid.MoveToFinished:Connect(function()
+        i += 1
+        if waypoints[i] then
+            humanoid:MoveTo(waypoints[i])
+            mob.Waypoint = i
+        else
+            mob.Completed = true
+        end
+    end)
+    setmetatable(mob, MobManager)
+    table.insert(self.Mobs, mob)
 end
 
 function MobManager.generateDefaultMob(weight)
@@ -74,10 +88,10 @@ function MobManager.generateSpecialMob(weight)
     return mob
 end
 
-function MobManager:spawnWave(toSpawn)
+function MobManager:spawnWave(waypoints, toSpawn)
     for _ = 1, #toSpawn, 1 do
         local mob = toSpawn[1]
-        self:Spawn(mob)
+        self:Spawn(waypoints, mob)
         table.remove(toSpawn, 1)
         task.wait(0.2)
     end
@@ -85,45 +99,14 @@ end
 
 function MobManager:TakeDamage(coinManager, mobIndex, damage)
     local mob = self.Mobs[mobIndex]
-    local humanoid = mob.Object.Humanoid
-    local prevHealth = humanoid.Health
-    humanoid:TakeDamage(damage)
-    coinManager.Coins += (prevHealth - humanoid.Health)
-    if humanoid.Health <= 0 then
+    local prevHealth = mob.Health
+    if prevHealth > damage then
+        mob.Health -= damage
+    else
+        table.remove(self.Mobs, mobIndex)
         mob.Object:Destroy()
     end
-end
-
-function MobManager:startMovement(wayPoints, mobIndex)
-    local mob = self.Mobs[mobIndex]
-    local moveConnection
-    local humanoid = mob.Object.Humanoid
-    local i = 2
-    local healthReduction = nil
-    table.insert(self.CurrentMoving, humanoid)
-    mob.Object:MoveTo(wayPoints[1])
-    humanoid:MoveTo(wayPoints[i])
-    mob.Waypoint = i
-    moveConnection = humanoid.MoveToFinished:Connect(function()
-        i += 1
-        if wayPoints[i] then
-            humanoid:MoveTo(wayPoints[i])
-            mob.Waypoint = i
-        else
-            healthReduction = 1
-        end
-    end)
-
-    local deathConnection = humanoid.Died:Once(function()
-        moveConnection:Disconnect()
-        healthReduction = 0
-    end)
-    repeat
-        task.wait()
-    until healthReduction
-    mob.Object:Destroy()
-    deathConnection:Disconnect()
-    return healthReduction
+    coinManager.Coins += (prevHealth - mob.Health)
 end
 
 function MobManager.new()

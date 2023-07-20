@@ -34,27 +34,18 @@ function Game.runUpdate(playerIndex, deltaTime)
     local towerManager = data.TowerManager
     local mobManager = data.MobManager
     local player = data.Player
+    local toRemove = {}
     for i, mob in pairs(mobManager.Mobs) do
-        local hum = mob.Object:FindFirstChild("Humanoid")
-        if not hum or hum.Health <= 0 then
-            table.remove(mobManager.Mobs, i)
+        if mob.Health <= 0 or mob.Completed then
+            table.insert(toRemove, i)
             continue
         end
-        local needAddition = true
-        for _, humanoid in pairs(mobManager.CurrentMoving) do
-            if hum == humanoid then
-                needAddition = false
-            end
-        end
-        if needAddition then
-            task.spawn(function()
-                local healthReduction = mobManager:startMovement(table.clone(data.MapManager.WayPoints), i)
-                if healthReduction > 0 then
-                    data.BaseManager.Health -= healthReduction
-                    RemoteEvent:FireClient(player, "Update", "BaseManager", data.BaseManager)
-                end
-            end)
-        end
+        local mobPos = mob.Object.PrimaryPart.Position
+        mob.Position = Vector3.new(mobPos.X, 0, mobPos.Z)
+    end
+    for i = #toRemove, 1, -1 do
+        mobManager.Mobs[toRemove[i]].Object:Destroy()
+        table.remove(mobManager.Mobs, toRemove[i])
     end
     for i, ti in pairs(towerManager.Towers) do
         local tower = require(Towers:FindFirstChild(ti.Name))
@@ -142,7 +133,7 @@ function Game.singlePlayer(player)
         RemoteEvent:FireClient(player, "WaveReady", Data[1].WaveManager.CurrentWave + 1)
         task.wait(10)
         RemoteEvent:FireClient(player, "WaveStart", Data[1].WaveManager.CurrentWave + 1)
-        Data[1].WaveManager:startWave(Data[1].MobManager)
+        Data[1].WaveManager:startWave(Data[1].MobManager, Data[1].MapManager.WayPoints)
     end
 end
 

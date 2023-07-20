@@ -1,7 +1,7 @@
 local WaveManager = {}
 WaveManager.__index = WaveManager
 
-function WaveManager:startWave(mobManager)
+function WaveManager:startWave(mobManager, waypoints)
     local GenerationFunctions = {
         Default = mobManager.generateDefaultMob;
         Speed = mobManager.generateSpeedMob;
@@ -46,7 +46,7 @@ function WaveManager:startWave(mobManager)
             table.insert(toSpawn, math.random(1, #toSpawn + 1), mob)
         end
     end
-    mobManager:spawnWave(toSpawn)
+    mobManager:spawnWave(waypoints, toSpawn)
 end
 
 function WaveManager.startGame()
