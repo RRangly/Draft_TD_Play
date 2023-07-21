@@ -33,11 +33,16 @@ function Game.runUpdate(playerIndex, deltaTime)
     local data = Data[playerIndex]
     local towerManager = data.TowerManager
     local mobManager = data.MobManager
+    local baseManager = data.BaseManager
     local player = data.Player
     local toRemove = {}
     for i, mob in pairs(mobManager.Mobs) do
         if mob.Health <= 0 or mob.Completed then
             table.insert(toRemove, i)
+            if mob.Completed then
+                baseManager.Health -= mob.Health
+                RemoteEvent:FireClient(player, "Update", "BaseManager", baseManager)
+            end
             continue
         end
         local mobPos = mob.Object.PrimaryPart.Position

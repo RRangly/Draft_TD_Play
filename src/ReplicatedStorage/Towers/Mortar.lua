@@ -13,7 +13,7 @@ local Mortar = {
             LevelName = "Basic";
             AttackSpeed = 3;
             AttackRange = 34;
-            Damage = 4;
+            Damage = 12;
             ExploRad = 6;
             Cost = 850;
         },
@@ -21,7 +21,7 @@ local Mortar = {
             LevelName = "Better Bombs";
             AttackSpeed = 3;
             AttackRange = 36;
-            Damage = 5;
+            Damage = 15;
             ExploRad = 8;
             Cost = 1100;
         },
@@ -29,7 +29,7 @@ local Mortar = {
             LevelName = "Improved Reloading";
             AttackSpeed = 2.6;
             AttackRange = 38;
-            Damage = 6;
+            Damage = 18;
             ExploRad = 8;
             Cost = 1300;
         },
@@ -37,7 +37,7 @@ local Mortar = {
             LevelName = "Optimized Mortar";
             AttackSpeed = 2.2;
             AttackRange = 42;
-            Damage = 6;
+            Damage = 18;
             ExploRad = 10;
             Cost = 1600;
         },
@@ -45,7 +45,7 @@ local Mortar = {
             LevelName = "Professional";
             AttackSpeed = 2;
             AttackRange = 48;
-            Damage = 10;
+            Damage = 30;
             ExploRad = 12;
             Cost = 2800;
         }
@@ -75,8 +75,8 @@ function Mortar.playAnim(model, targetPos)
     ammoClone.Transparency = 0
     ammoClone.CanCollide = false
     for _, point in pairs(points) do
-        ammoClone.CFrame = CFrame.new(ammoClone.Position, point)
         task.wait(ShellSpeed / 19)
+        ammoClone.CFrame = CFrame.new(ammoClone.Position, point)
         ammoClone.CFrame = CFrame.new(point)
     end
     ammoClone:Destroy()

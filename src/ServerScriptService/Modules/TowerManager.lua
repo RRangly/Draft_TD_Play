@@ -49,6 +49,7 @@ function TowerManager:place(towerIndex, position)
             AttackCD = 0;
             PreAttackCD = 0;
             Level = 1;
+            Position = clone:GetPivot().Position;
             Target = "First";
         })
         table.remove(self.Cards, towerIndex)
@@ -101,8 +102,7 @@ function TowerManager:attackAvailable(towerIndex, mobs)
     local tower = self.Towers[towerIndex]
     local towerInfo = require(Towers:FindFirstChild(tower.Name))
     local range = towerInfo.Stats[tower.Level].AttackRange
-    local towerPart = tower.Model.PrimaryPart
-    local towerVector = Vector3.new(towerPart.Position.X, 0, towerPart.Position.Z)
+    local towerVector = Vector3.new(tower.Position.X, 0, tower.Position.Z)
 
     for _, mob in pairs(mobs) do
         local mobVector = mob.Position
@@ -118,8 +118,7 @@ end
 function TowerManager:findClosestMob(towerIndex, mobs)
     local tower = self.Towers[towerIndex]
     local towerInfo = require(Towers:FindFirstChild(tower.Name))
-    local towerPart = tower.Model.PrimaryPart
-    local towerVector = Vector3.new(towerPart.Position.X, 0, towerPart.Position.Z)
+    local towerVector = Vector3.new(tower.Position.X, 0, tower.Position.Z)
     local closestMob = nil
     local closestDistance = towerInfo.Stats[tower.Level].AttackRange
     for i, mob in pairs(mobs) do
@@ -137,8 +136,7 @@ function TowerManager:findLowestHealth(towerIndex, mobs)
     local tower = self.Towers[towerIndex]
     local towerInfo = require(Towers:FindFirstChild(tower.Name))
     local range = towerInfo.Stats[tower.Level].AttackRange
-    local towerPart = tower.Model.PrimaryPart
-    local towerVector = Vector3.new(towerPart.Position.X, 0, towerPart.Position.Z)
+    local towerVector = Vector3.new(tower.Position.X, 0, tower.Position.Z)
 
     local lowestHealthMob = nil
     local lowestHealth = math.huge
@@ -157,8 +155,7 @@ function TowerManager:findFirstMob(towerIndex, mobs, waypoints)
     local tower = self.Towers[towerIndex]
     local towerInfo = require(Towers:FindFirstChild(tower.Name))
     local range = towerInfo.Stats[tower.Level].AttackRange
-    local towerPart = tower.Model.PrimaryPart
-    local towerVector = Vector3.new(towerPart.Position.X, 0, towerPart.Position.Z)
+    local towerVector = Vector3.new(tower.Position.X, 0, tower.Position.Z)
 
     local FirstMob = nil
     local FirstWaypoint = 0
