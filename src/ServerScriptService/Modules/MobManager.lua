@@ -1,8 +1,9 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local ServerScriptService = game:GetService("ServerScriptService")
 local Workspace = game:GetService("Workspace")
 
---local Mobs = ReplicatedStorage.Mobs
+local Data = require(ServerScriptService.Modules.Data)
 local MobModels = ReplicatedStorage.MobModels
 local GameMechanics = require(ReplicatedStorage.Game.GameMechanics)
 local MobFolder = Workspace.Mobs
@@ -10,7 +11,8 @@ local MobFolder = Workspace.Mobs
 local MobManager = {}
 MobManager.__index = MobManager
 
-function MobManager:Spawn(waypoints, mobInfo)
+function MobManager:Spawn(mobInfo)
+    local wayPoints = Data[self.PIndex].MapManager.WayPoints
     local model = MobModels:FindFirstChild(mobInfo.Model)
     local clone = model:Clone()
     local humanoid = clone.Humanoid
@@ -25,7 +27,7 @@ function MobManager:Spawn(waypoints, mobInfo)
         end
     end
 
-    clone:MoveTo(waypoints[1])
+    clone:MoveTo(wayPoints[1])
     local mob = {
         Object = clone;
         MobName = "Zombie";
@@ -33,15 +35,16 @@ function MobManager:Spawn(waypoints, mobInfo)
         MaxHealth = mobInfo.MaxHealth;
         Health = mobInfo.MaxHealth;
         Waypoint = 2;
-        Position = waypoints[1];
-        Completed = false
+        Position = wayPoints[1];
+        Frozen = false;
+        Completed = false;
     }
     local i = 2
-    humanoid:MoveTo(waypoints[i])
+    humanoid:MoveTo(wayPoints[i])
     humanoid.MoveToFinished:Connect(function()
         i += 1
-        if waypoints[i] then
-            humanoid:MoveTo(waypoints[i])
+        if wayPoints[i] then
+            humanoid:MoveTo(wayPoints[i])
             mob.Waypoint = i
         else
             mob.Completed = true
@@ -88,29 +91,47 @@ function MobManager.generateSpecialMob(weight)
     return mob
 end
 
-function MobManager:spawnWave(waypoints, toSpawn)
+function MobManager:spawnWave(toSpawn)
     for _ = 1, #toSpawn, 1 do
         local mob = toSpawn[1]
-        self:Spawn(waypoints, mob)
+        self:Spawn(mob)
         table.remove(toSpawn, 1)
         task.wait(0.2)
     end
 end
 
-function MobManager:TakeDamage(coinManager, mobIndex, damage)
+function MobManager:takeDamage(mobIndex, damage)
+    local coinManager = Data[self.PIndex].CoinManager
     local mob = self.Mobs[mobIndex]
     local prevHealth = mob.Health
-    if prevHealth > damage then
-        mob.Health -= damage
-    else
+    mob.Health -= damage
+    if mob.Health < 0 then
+        mob.Health = 0
+    end
+    local damageDealt = prevHealth - mob.Health
+    coinManager.Coins += damageDealt
+    if mob.Health == 0 then
         table.remove(self.Mobs, mobIndex)
         mob.Object:Destroy()
+        return mobIndex, true, damageDealt
     end
-    coinManager.Coins += (prevHealth - mob.Health)
+    return mobIndex, false, damageDealt
 end
 
-function MobManager.new()
+function MobManager:freeze(mobIndex, time)
+    local mob = self.Mobs[mobIndex]
+    if not mob.Frozen then
+        local hum = mob.Object.Humanoid
+        mob.Frozen = true
+        hum.WalkSpeed = 0
+        task.wait(time)
+        hum.WalkSpeed = mob.WalkSpeed
+    end
+end
+
+function MobManager.new(pIndex)
     local mobs = {
+        PIndex = pIndex;
         CurrentWave = 0;
         Mobs = {};
         CurrentMoving = {};

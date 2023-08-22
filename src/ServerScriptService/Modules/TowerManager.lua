@@ -1,10 +1,11 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
 local Workspace = game:GetService("Workspace")
 
+local Data = require(ServerScriptService.Modules.Data)
 local TowerModels = ReplicatedStorage.TowerModels
 local Towers = ReplicatedStorage.Towers
 local WorkSpaceTower = Workspace.Towers
-local Data = require(script.Parent.Data)
 
 local TowerManager = {}
 TowerManager.__index = TowerManager
@@ -26,9 +27,10 @@ function TowerManager:place(towerIndex, position)
     if not card then
         return
     end
+
     local towerInfo = require(Towers:FindFirstChild(cards[towerIndex]))
     local placeAble = TowerManager:checkPlacementAvailable(towerInfo.Placement.Type, position)
-    print("Placeable", placeAble)
+
     if placeAble and #self.Towers < self.TowerLimit then
         local clone = TowerModels:FindFirstChild(card):Clone()
         clone.Parent = WorkSpaceTower
@@ -58,10 +60,10 @@ function TowerManager:place(towerIndex, position)
     return false
 end
 
-function TowerManager:upgrade(playerIndex, manageType, towerIndex)
-    local data = Data[playerIndex]
-    local coinManager = data.CoinManager
+function TowerManager:upgrade(manageType, towerIndex)
+    local coinManager = Data[self.PIndex].CoinManager
     local tower = self.Towers[towerIndex]
+
     if tower then
         local towerInfo = require(Towers:FindFirstChild(tower.Name))
         if manageType == "Sell" then
@@ -98,8 +100,10 @@ function TowerManager:delete(towerIndex)
     end
 end
 
-function TowerManager:attackAvailable(towerIndex, mobs)
+function TowerManager:attackAvailable(towerIndex)
+    local mobs = Data[self.PIndex].MobManager.Mobs
     local tower = self.Towers[towerIndex]
+
     local towerInfo = require(Towers:FindFirstChild(tower.Name))
     local range = towerInfo.Stats[tower.Level].AttackRange
     local towerVector = Vector3.new(tower.Position.X, 0, tower.Position.Z)
@@ -115,12 +119,15 @@ function TowerManager:attackAvailable(towerIndex, mobs)
     return false
 end
 
-function TowerManager:findClosestMob(towerIndex, mobs)
+function TowerManager:findClosestMob(towerIndex)
+    local mobs = Data[self.PIndex].MobManager.Mobs
     local tower = self.Towers[towerIndex]
+
     local towerInfo = require(Towers:FindFirstChild(tower.Name))
     local towerVector = Vector3.new(tower.Position.X, 0, tower.Position.Z)
     local closestMob = nil
     local closestDistance = towerInfo.Stats[tower.Level].AttackRange
+
     for i, mob in pairs(mobs) do
         local mobVector = mob.Position
         local mobDistance = (mobVector - towerVector).Magnitude
@@ -132,7 +139,8 @@ function TowerManager:findClosestMob(towerIndex, mobs)
     return closestMob
 end
 
-function TowerManager:findLowestHealth(towerIndex, mobs)
+function TowerManager:findLowestHealth(towerIndex)
+    local mobs = Data[self.PIndex].MobManager.Mobs
     local tower = self.Towers[towerIndex]
     local towerInfo = require(Towers:FindFirstChild(tower.Name))
     local range = towerInfo.Stats[tower.Level].AttackRange
@@ -151,7 +159,9 @@ function TowerManager:findLowestHealth(towerIndex, mobs)
     return lowestHealthMob
 end
 
-function TowerManager:findFirstMob(towerIndex, mobs, waypoints)
+function TowerManager:findFirstMob(towerIndex)
+    local mobs = Data[self.PIndex].MobManager.Mobs
+    local wayPoints = Data[self.PIndex].MapManager.WayPoints
     local tower = self.Towers[towerIndex]
     local towerInfo = require(Towers:FindFirstChild(tower.Name))
     local range = towerInfo.Stats[tower.Level].AttackRange
@@ -165,7 +175,7 @@ function TowerManager:findFirstMob(towerIndex, mobs, waypoints)
         local mobDistance = (mobVector - towerVector).Magnitude
         if mobDistance < range then
             if mob.Waypoint >= FirstWaypoint then
-                local waypoint = waypoints[mob.Waypoint - 1]
+                local waypoint = wayPoints[mob.Waypoint - 1]
                 local waypointVector = Vector3.new(waypoint.X, 0, waypoint.Z)
                 local waypointDistance = (mobVector - waypointVector).Magnitude
                 if mob.Waypoint > FirstWaypoint or waypointDistance >= FirstDistance then
@@ -179,8 +189,9 @@ function TowerManager:findFirstMob(towerIndex, mobs, waypoints)
     return FirstMob
 end
 
-function TowerManager.new(cards)
+function TowerManager.new(cards, pIndex)
     local towers = {
+        PIndex = pIndex;
         Cards = cards;
         Towers = {};
         TowerLimit = 20;

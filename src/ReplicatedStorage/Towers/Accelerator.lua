@@ -1,3 +1,11 @@
+local RunService = game:GetService("RunService")
+local ServerScriptService = game:GetService("ServerScriptService")
+
+local Data
+if RunService:IsServer() then
+    Data = require(ServerScriptService.Modules.Data)
+end
+
 local Accelerator = {
     Name = "Accelerator";
     Stats = {
@@ -58,21 +66,21 @@ function Accelerator.playAnim(model, animName, animLength)
     animator:LoadAnimation()
 end
 
-function Accelerator.update(data, towerIndex, deltaTime)
+function Accelerator.update(playerIndex, towerIndex, deltaTime)
+    local data = Data[playerIndex]
     local towerManager = data.TowerManager
     local mobManager = data.MobManager
-    local waypoints = data.MapManager.WayPoints
     local clientLoad = data.ClientLoad
     local tower = towerManager.Towers[towerIndex]
     local stats = Accelerator.Stats[tower.Level]
-    if towerManager:attackAvailable(towerIndex, mobManager.Mobs) then
+    if towerManager:attackAvailable(towerIndex) then
         local target
         if tower.Target == "Closest" then
-            target = towerManager:findClosestMob(towerIndex, mobManager.Mobs)
+            target = towerManager:findClosestMob(towerIndex)
         elseif tower.Target == "Lowest Health" then
             target = towerManager:findLowestHealth(towerIndex, mobManager.Mobs)
         elseif tower.Target == "First" then
-            target = towerManager:findFirstMob(towerIndex, mobManager.Mobs, waypoints)
+            target = towerManager:findFirstMob(towerIndex)
         end
         local model = tower.Model
         local mobPart = mobManager.Mobs[target].Object.PrimaryPart
@@ -80,19 +88,19 @@ function Accelerator.update(data, towerIndex, deltaTime)
         tower.PreAttackCD += deltaTime
         if not (tower.PreAttackCD >= stats.PreAttack) then
             tower.AttackCD = 0;
-            return
         end
         tower.AttackCD += deltaTime
         if tower.AttackCD >= stats.AttackSpeed then
             tower.AttackCD = 0
             clientLoad:playSound("MinigunShot")
             clientLoad:playAnimation(towerIndex, mobPart.Position)
-            mobManager:TakeDamage(data.CoinManager, target, stats.Damage)
+            return {mobManager:takeDamage(target, stats.Damage)}
         end
     else
         tower.AttackCD = 0
         tower.PreAttackCD = 0
     end
+    return {}
 end
 
 return Accelerator

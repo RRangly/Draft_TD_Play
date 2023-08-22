@@ -1,8 +1,9 @@
 local BaseManager = {}
 BaseManager.__index = BaseManager
 
-function BaseManager.new()
+function BaseManager.new(pIndex)
     local base = {
+        PIndex = pIndex;
         Health = 100;
         MaxHealth = 100;
     }

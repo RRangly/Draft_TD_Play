@@ -1,7 +1,13 @@
+local ServerScriptService = game:GetService("ServerScriptService")
+
+local Data = require(ServerScriptService.Modules.Data)
+
 local WaveManager = {}
 WaveManager.__index = WaveManager
 
-function WaveManager:startWave(mobManager, waypoints)
+function WaveManager:startWave()
+    local mobManager = Data[self.PIndex].MobManager
+    local traitsManager = Data[self.PIndex].TraitsManager
     local GenerationFunctions = {
         Default = mobManager.generateDefaultMob;
         Speed = mobManager.generateSpeedMob;
@@ -9,6 +15,9 @@ function WaveManager:startWave(mobManager, waypoints)
         Special = mobManager.generateSpecialMob;
     }
     self.CurrentWave += 1
+    if self.CurrentWave % 5 == 0 then
+        traitsManager:newTraits()
+    end
     local difficultyWeight = 1.095^self.CurrentWave * 100
     local waveType = math.random(1, 10)
     local mobsDistribution
@@ -46,11 +55,12 @@ function WaveManager:startWave(mobManager, waypoints)
             table.insert(toSpawn, math.random(1, #toSpawn + 1), mob)
         end
     end
-    mobManager:spawnWave(waypoints, toSpawn)
+    mobManager:spawnWave(toSpawn)
 end
 
-function WaveManager.startGame()
+function WaveManager.startGame(pIndex)
     local wave = {
+        PIndex = pIndex;
         CurrentWave = 0;
     }
     setmetatable(wave, WaveManager)

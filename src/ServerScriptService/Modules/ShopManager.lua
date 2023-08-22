@@ -1,10 +1,14 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
 local Towers = ReplicatedStorage.Towers
+
+local Data = require(ServerScriptService.Modules.Data)
 
 local Shop = {}
 Shop.__index = Shop
 
-function Shop:reRoll(coinManager)
+function Shop:reRoll()
+    local coinManager = Data[self.PIndex].CoinManager
     local cost = math.floor(1.1 ^ self.ReRoll * 115)
     if coinManager.Coins >= cost then
         print("Coins", coinManager.Coins, cost)
@@ -25,7 +29,9 @@ function Shop:reRollNoCost()
     end
 end
 
-function Shop:purchaseChunk(coinManager, mapManager)
+function Shop:purchaseChunk()
+    local coinManager = Data[self.PIndex].CoinManager
+    local mapManager = Data[self.PIndex].MapManager
     local cost = math.floor(1.1 ^ self.Chunks * 825)
     if coinManager.Coins >= cost then
         coinManager.Coins -= cost
@@ -50,8 +56,9 @@ function Shop:pick(data, pickNum)
     end
 end
 
-function Shop.new()
+function Shop.new(pIndex)
     local auction = {
+        PIndex = pIndex;
         ShopItems = {};
         ReRoll = 0;
         Chunks = 0;

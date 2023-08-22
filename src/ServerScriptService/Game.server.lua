@@ -25,6 +25,7 @@ local MapGenerator = require(Modules.MapGenerator)
 local WaveManager = require(Modules.WaveManager)
 local ClientLoad = require(Modules.ClientLoad)
 local ShopManager = require(Modules.ShopManager)
+local TraitsManager = require(Modules.TraitsManager)
 
 --local PlayingPlayers = {}
 local Game = {}
@@ -55,7 +56,10 @@ function Game.runUpdate(playerIndex, deltaTime)
     for i, ti in pairs(towerManager.Towers) do
         local tower = require(Towers:FindFirstChild(ti.Name))
         --tower.update(player, towerManager, i, mobManager, data.Map.WayPoints, deltaTime)
-        tower.update(data, i, deltaTime)
+        local attInfo = tower.update(playerIndex, i, deltaTime)
+        for _, info in attInfo do
+            data.TraitsManager:invoke("MobDamage", info)
+        end
     end
 end
 
@@ -105,17 +109,18 @@ function Game.singlePlayer(player)
     Data[1].Player = player
     Draft.megadraft({player})
     local draft = DraftEnd.Event:Wait()
-    Data[1].TowerManager = TowerManager.new(draft[1])
+    Data[1].TowerManager = TowerManager.new(draft[1], 1)
     --Data[1].MapManager = MapGenerator.generateMap()
     --Data[1].MapManager:generateChunk()
     Data[1].MapManager = MapManager.load("Forest_Camp", Vector3.new(0, 0, 0 ))
-    Data[1].BaseManager = BaseManager.new()
-    Data[1].MobManager = MobManager.new()
-    Data[1].CoinManager = CoinManager.new()
-    Data[1].WaveManager = WaveManager.startGame()
-    Data[1].ShopManager = ShopManager.new()
+    Data[1].BaseManager = BaseManager.new(1)
+    Data[1].MobManager = MobManager.new(1)
+    Data[1].CoinManager = CoinManager.new(1)
+    Data[1].WaveManager = WaveManager.startGame(1)
+    Data[1].ShopManager = ShopManager.new(1)
+    Data[1].TraitsManager = TraitsManager.new(1)
     Data[1].ShopManager:reRollNoCost()
-    Data[1].ClientLoad = ClientLoad.new(player)
+    Data[1].ClientLoad = ClientLoad.new(player, 1)
     task.wait(5)
     player.Character:MoveTo(Vector3.new(Data[1].MapManager.PlayerSpawn))
     RemoteEvent:FireClient(player, "GameStarted", Data[1])
@@ -138,7 +143,7 @@ function Game.singlePlayer(player)
         RemoteEvent:FireClient(player, "WaveReady", Data[1].WaveManager.CurrentWave + 1)
         task.wait(10)
         RemoteEvent:FireClient(player, "WaveStart", Data[1].WaveManager.CurrentWave + 1)
-        Data[1].WaveManager:startWave(Data[1].MobManager, Data[1].MapManager.WayPoints)
+        Data[1].WaveManager:startWave()
     end
 end
 

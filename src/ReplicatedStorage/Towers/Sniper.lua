@@ -1,10 +1,11 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService")
-local TweenService = game:GetService("TweenService")
 
-local ClientLoad = ReplicatedStorage.ClientLoad
-local Animation = ReplicatedStorage.Animations.MinigunShot
+local Data
+if RunService:IsServer() then
+    Data = require(ServerScriptService.Modules.Data)
+end
 
 local Sniper = {
     Name = "Sniper";
@@ -57,21 +58,21 @@ local Sniper = {
     }
 }
 
-function Sniper.update(data, towerIndex, deltaTime)
+function Sniper.update(pIndex, towerIndex, deltaTime)
+    local data = Data[pIndex]
     local towerManager = data.TowerManager
     local mobManager = data.MobManager
-    local waypoints = data.MapManager.WayPoints
     local clientLoad = data.ClientLoad
     local tower = towerManager.Towers[towerIndex]
     local stats = Sniper.Stats[tower.Level]
-    if towerManager:attackAvailable(towerIndex, mobManager.Mobs) then
+    if towerManager:attackAvailable(towerIndex) then
         local target
         if tower.Target == "Closest" then
-            target = towerManager:findClosestMob(towerIndex, mobManager.Mobs)
+            target = towerManager:findClosestMob(towerIndex)
         elseif tower.Target == "Lowest Health" then
-            target = towerManager:findLowestHealth(towerIndex, mobManager.Mobs)
+            target = towerManager:findLowestHealth(towerIndex)
         elseif tower.Target == "First" then
-            target = towerManager:findFirstMob(towerIndex, mobManager.Mobs, waypoints)
+            target = towerManager:findFirstMob(towerIndex)
         end
         local model = tower.Model
         local mobPart = mobManager.Mobs[target].Object.PrimaryPart
@@ -80,12 +81,13 @@ function Sniper.update(data, towerIndex, deltaTime)
         if tower.AttackCD >= stats.AttackSpeed then
             tower.AttackCD = 0
             clientLoad:playSound("GunShot")
-            mobManager:TakeDamage(data.CoinManager, target, stats.Damage)
+            return {mobManager:takeDamage(target, stats.Damage)}
         end
     else
         tower.AttackCD = 0
         tower.PreAttackCD = 0
     end
+    return {}
 end
 
 return Sniper

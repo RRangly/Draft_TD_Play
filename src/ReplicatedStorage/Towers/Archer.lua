@@ -1,5 +1,12 @@
+local RunService = game:GetService("RunService")
+local ServerScriptService = game:GetService("ServerScriptService")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
+
+local Data
+if RunService:IsServer() then
+    Data = require(ServerScriptService.Modules.Data)
+end
 
 local Archer = {
     Name = "Archer";
@@ -53,21 +60,21 @@ local Archer = {
 }
 
 
-function Archer.update(data, towerIndex, deltaTime)
+function Archer.update(pIndex, towerIndex, deltaTime)
+    local data = Data[pIndex]
     local towerManager = data.TowerManager
     local mobManager = data.MobManager
-    local waypoints = data.MapManager.WayPoints
     local clientLoad = data.ClientLoad
     local tower = towerManager.Towers[towerIndex]
     local stats = Archer.Stats[tower.Level]
-    if towerManager:attackAvailable(towerIndex, mobManager.Mobs) then
+    if towerManager:attackAvailable(towerIndex) then
         local target
         if tower.Target == "Closest" then
-            target = towerManager:findClosestMob(towerIndex, mobManager.Mobs)
+            target = towerManager:findClosestMob(towerIndex)
         elseif tower.Target == "Lowest Health" then
-            target = towerManager:findLowestHealth(towerIndex, mobManager.Mobs)
+            target = towerManager:findLowestHealth(towerIndex)
         elseif tower.Target == "First" then
-            target = towerManager:findFirstMob(towerIndex, mobManager.Mobs, waypoints)
+            target = towerManager:findFirstMob(towerIndex)
         end
         local model = tower.Model
         local mobPart = mobManager.Mobs[target].Object.PrimaryPart
@@ -86,10 +93,10 @@ function Archer.update(data, towerIndex, deltaTime)
                 arrow.Position = arrow.Position + direction * i
                 task.wait(stats.ArrowSpeed / stats.AttackRange)
             end
-            --local arrowTween = TweenService:Create(arrow, TweenInfo.new(tweenTime), {Position = arrow.Position + direction * stats.AttackRange})
-            --arrowTween:Play()
-            --local alreadyHit = {}
             --[[
+            local arrowTween = TweenService:Create(arrow, TweenInfo.new(tweenTime), {Position = arrow.Position + direction * stats.AttackRange})
+            arrowTween:Play()
+            local alreadyHit = {}
             arrow.Touched:Connect(function(otherPart)
                 if otherPart.CollisionGroup == "GameAssets" then
                     for _, i in alreadyHit do
@@ -109,14 +116,15 @@ function Archer.update(data, towerIndex, deltaTime)
                     end
                 end
             end)
+            arrowTween.Completed:Wait()
             ]]
-            --arrowTween.Completed:Wait()
             arrow:Destroy()
         end
     else
         tower.AttackCD = 0
         tower.PreAttackCD = 0
     end
+    return {}
 end
 
 return Archer

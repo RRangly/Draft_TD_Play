@@ -38,14 +38,16 @@ function ClientLoad:playParticle(towerIndex, target)
     instance:Destroy()
 end
 
-function ClientLoad.new(player)
+function ClientLoad.new(player, pIndex)
     local folder = Instance.new("Folder", ClientLoadFol)
     folder.Name = player.UserId
     local clientLoad = {
+        PIndex = pIndex;
         Player = player;
         Folder = folder
     }
     setmetatable(clientLoad, ClientLoad)
     return clientLoad
 end
+
 return ClientLoad

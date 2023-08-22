@@ -3,7 +3,10 @@ local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService")
 local TweenService = game:GetService("TweenService")
 
-local ClientLoad = ReplicatedStorage.ClientLoad
+local Data
+if RunService:IsServer() then
+    Data = require(ServerScriptService.Modules.Data)
+end
 local Animation = ReplicatedStorage.Animations.MinigunShot
 
 local Minigunner = {
@@ -93,41 +96,42 @@ function Minigunner.playAnim(model, targetPos)
     effect:Destroy()
 end
 
-function Minigunner.update(data, towerIndex, deltaTime)
+function Minigunner.update(pIndex, towerIndex, deltaTime)
+    local data = Data[pIndex]
     local towerManager = data.TowerManager
     local mobManager = data.MobManager
-    local waypoints = data.MapManager.WayPoints
     local clientLoad = data.ClientLoad
     local tower = towerManager.Towers[towerIndex]
     local stats = Minigunner.Stats[tower.Level]
-    if towerManager:attackAvailable(towerIndex, mobManager.Mobs) then
+    if towerManager:attackAvailable(towerIndex) then
         local target
         if tower.Target == "Closest" then
-            target = towerManager:findClosestMob(towerIndex, mobManager.Mobs)
+            target = towerManager:findClosestMob(towerIndex)
         elseif tower.Target == "Lowest Health" then
-            target = towerManager:findLowestHealth(towerIndex, mobManager.Mobs)
+            target = towerManager:findLowestHealth(towerIndex)
         elseif tower.Target == "First" then
-            target = towerManager:findFirstMob(towerIndex, mobManager.Mobs, waypoints)
+            target = towerManager:findFirstMob(towerIndex)
         end
         local model = tower.Model
         local mobPart = mobManager.Mobs[target].Object.PrimaryPart
         model:PivotTo(CFrame.new(model:GetPivot().Position, Vector3.new(mobPart.Position.X, model:GetPivot().Position.Y, mobPart.Position.Z)))
         tower.PreAttackCD += deltaTime
         if not (tower.PreAttackCD >= stats.PreAttack) then
+            tower.AttackCD += deltaTime
+            if tower.AttackCD >= stats.AttackSpeed then
+                tower.AttackCD = 0
+                clientLoad:playSound("MinigunShot")
+                clientLoad:playAnimation(towerIndex, mobPart.Position)
+                return {mobManager:takeDamage(target, stats.Damage)}
+            end
+        else
             tower.AttackCD = 0;
-            return
-        end
-        tower.AttackCD += deltaTime
-        if tower.AttackCD >= stats.AttackSpeed then
-            tower.AttackCD = 0
-            clientLoad:playSound("MinigunShot")
-            clientLoad:playAnimation(towerIndex, mobPart.Position)
-            mobManager:TakeDamage(data.CoinManager, target, stats.Damage)
         end
     else
         tower.AttackCD = 0
         tower.PreAttackCD = 0
     end
+    return {}
 end
 
 return Minigunner
