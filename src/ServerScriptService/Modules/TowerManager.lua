@@ -34,7 +34,7 @@ function TowerManager:place(towerIndex, position)
     if placeAble and #self.Towers < self.TowerLimit then
         local clone = TowerModels:FindFirstChild(card):Clone()
         clone.Parent = WorkSpaceTower
-        for _, part in pairs(clone:GetDescendants()) do
+        for _, part in ipairs(clone:GetDescendants()) do
             if part:IsA("BasePart") then
                 part.Anchored = true
                 part.CanCollide = true
@@ -60,7 +60,7 @@ function TowerManager:place(towerIndex, position)
     return false
 end
 
-function TowerManager:upgrade(manageType, towerIndex)
+function TowerManager:manage(manageType, towerIndex)
     local coinManager = Data[self.PIndex].CoinManager
     local tower = self.Towers[towerIndex]
 
@@ -108,7 +108,7 @@ function TowerManager:attackAvailable(towerIndex)
     local range = towerInfo.Stats[tower.Level].AttackRange
     local towerVector = Vector3.new(tower.Position.X, 0, tower.Position.Z)
 
-    for _, mob in pairs(mobs) do
+    for _, mob in ipairs(mobs) do
         local mobVector = mob.Position
         local mobDistance = (mobVector - towerVector).Magnitude
         if mobDistance < range then
@@ -128,7 +128,7 @@ function TowerManager:findClosestMob(towerIndex)
     local closestMob = nil
     local closestDistance = towerInfo.Stats[tower.Level].AttackRange
 
-    for i, mob in pairs(mobs) do
+    for i, mob in ipairs(mobs) do
         local mobVector = mob.Position
         local mobDistance = (mobVector - towerVector).Magnitude
         if mobDistance < closestDistance then
@@ -148,7 +148,7 @@ function TowerManager:findLowestHealth(towerIndex)
 
     local lowestHealthMob = nil
     local lowestHealth = math.huge
-    for i, mob in pairs(mobs) do
+    for i, mob in ipairs(mobs) do
         local mobVector = mob.Position
         local mobHealth = mob.Health
         local mobDistance = (mobVector - towerVector).Magnitude
@@ -170,7 +170,7 @@ function TowerManager:findFirstMob(towerIndex)
     local FirstMob = nil
     local FirstWaypoint = 0
     local FirstDistance = 0
-    for i, mob in pairs(mobs) do
+    for i, mob in ipairs(mobs) do
         local mobVector = mob.Position
         local mobDistance = (mobVector - towerVector).Magnitude
         if mobDistance < range then

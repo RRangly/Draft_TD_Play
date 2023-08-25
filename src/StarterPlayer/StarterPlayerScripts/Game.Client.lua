@@ -13,6 +13,7 @@ local MobHealthDisplay = require(Modules:WaitForChild("MobHealthDisplay"))
 local HudManager = require(Modules:WaitForChild("HudManager"))
 local GameFXManager = require(Modules:WaitForChild("GameFXManager"))
 local Data = require(Modules:WaitForChild("Data"))
+local TraitsManager = require(Modules:WaitForChild("TraitsManager"))
 
 local PlayerGui = Player.PlayerGui
 
@@ -23,6 +24,7 @@ local GameStarted = ClientEvents.GameStarted
 local WaveReady = ClientEvents.WaveReady
 local WaveStart = ClientEvents.WaveStart
 local Update = ClientEvents.Update
+local TraitSelect = ClientEvents.TraitSelect
 
 RemoteEvent:FireServer("GameLoaded")
 local function startGame(data)
@@ -68,6 +70,10 @@ end)
 
 WaveStart.Event:Connect(function(wave)
     HudManager.WaveManager.updateWave(wave)
+end)
+
+TraitSelect.Event:Connect(function(selections)
+    TraitsManager.SelectTraits(selections)
 end)
 
 UserInputService.InputBegan:Connect(function(inputObj)

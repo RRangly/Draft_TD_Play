@@ -19,7 +19,7 @@ function MobManager:Spawn(mobInfo)
     humanoid.WalkSpeed = mobInfo.WalkSpeed
     clone.Parent = MobFolder
 
-    for _, part in pairs(clone:GetDescendants()) do
+    for _, part in ipairs(clone:GetDescendants()) do
         if part:IsA("BasePart") then
             part.CollisionGroup = "Mobs"
             part.CanCollide = true
@@ -113,19 +113,25 @@ function MobManager:takeDamage(mobIndex, damage)
     if mob.Health == 0 then
         table.remove(self.Mobs, mobIndex)
         mob.Object:Destroy()
-        return mobIndex, true, damageDealt
+        return {mobIndex, true, damageDealt}
     end
-    return mobIndex, false, damageDealt
+    return {mobIndex, false, damageDealt}
 end
 
-function MobManager:freeze(mobIndex, time)
+function MobManager:freeze(mobIndex, length)
     local mob = self.Mobs[mobIndex]
+    local model = mob.Object
     if not mob.Frozen then
-        local hum = mob.Object.Humanoid
+        model.Ice.Transparency = 0.4
+        local hum = model.Humanoid
         mob.Frozen = true
         hum.WalkSpeed = 0
-        task.wait(time)
+        task.wait(length)
+        if model:FindFirstChild("Ice") then
+            model.Ice.Transparency = 1
+        end
         hum.WalkSpeed = mob.WalkSpeed
+        mob.Frozen = false
     end
 end
 

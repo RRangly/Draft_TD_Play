@@ -62,6 +62,7 @@ function TowerManager.updateSelection(towerIndex)
         TowerManager.SelectFrame:Destroy()
     end
     if not towerIndex then
+        TowerManager.Selected.Index = nil
         return
     end
 
@@ -251,7 +252,6 @@ function TowerManager.updateCards()
 end
 
 function TowerManager.update()
-    print("Update", TowerManager.Selected.Index)
     TowerManager.updateSelection(TowerManager.Selected.Index)
     TowerManager.updateCards()
 end

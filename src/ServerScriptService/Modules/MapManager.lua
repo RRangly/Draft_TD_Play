@@ -19,13 +19,13 @@ function MapManager.load(mapName, origin)
     }
     local ps = mapInfo.PlayerSpawn
     map.PlayerSpawn = Vector3.new(ps.X + origin.X, ps.Y + origin.Y, ps.Z + origin.Z)
-    for i, waypoint in pairs(mapInfo.WayPoints) do
+    for i, waypoint in ipairs(mapInfo.WayPoints) do
         map.WayPoints[i] = Vector3.new(waypoint.X + origin.X, waypoint.Y + origin.Y, waypoint.Z + origin.Z)
     end
     local clone = mapModel:Clone()
     clone.Parent = ActiveMap
 
-    for _, part in pairs(clone:GetDescendants()) do
+    for _, part in ipairs(clone:GetDescendants()) do
         if part:IsA("BasePart") then
             --part.CollisionGroup = "GameMap"
             local pos = part.Position

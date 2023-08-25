@@ -53,9 +53,8 @@ function Game.runUpdate(playerIndex, deltaTime)
         mobManager.Mobs[toRemove[i]].Object:Destroy()
         table.remove(mobManager.Mobs, toRemove[i])
     end
-    for i, ti in pairs(towerManager.Towers) do
+    for i, ti in ipairs(towerManager.Towers) do
         local tower = require(Towers:FindFirstChild(ti.Name))
-        --tower.update(player, towerManager, i, mobManager, data.Map.WayPoints, deltaTime)
         local attInfo = tower.update(playerIndex, i, deltaTime)
         for _, info in attInfo do
             data.TraitsManager:invoke("MobDamage", info)
@@ -152,7 +151,7 @@ GameLoaded.Event:Connect(function(player)
 end)
 
 PlaceTower.Event:Connect(function(player, towerName, position)
-    for _, data in pairs(Data) do
+    for _, data in ipairs(Data) do
         if data.Player == player then
             local placed = data.TowerManager:place(towerName, position)
             if placed then
@@ -163,9 +162,9 @@ PlaceTower.Event:Connect(function(player, towerName, position)
 end)
 
 ManageTower.Event:Connect(function(player, manageType, towerIndex)
-    for i, data in pairs(Data) do
+    for _, data in ipairs(Data) do
         if data.Player == player then
-            local applied = data.TowerManager:upgrade(i, manageType, towerIndex)
+            local applied = data.TowerManager:manage(manageType, towerIndex)
             if applied then
                 RemoteEvent:FireClient(player, "Update", "TowerManager", data.TowerManager)
             end
@@ -174,14 +173,13 @@ ManageTower.Event:Connect(function(player, manageType, towerIndex)
 end)
 
 ManageShop.Event:Connect(function(player, manageType, ...)
-    for _, data in pairs(Data) do
+    for _, data in ipairs(Data) do
         if data.Player == player then
             if manageType == "Pick" then
                 data.ShopManager:pick(data, ...)
                 RemoteEvent:FireClient(player, "Update", "TowerManager", data.TowerManager)
                 RemoteEvent:FireClient(player, "Update", "ShopManager", data.ShopManager)
             elseif manageType == "ReRoll" then
-                print("CallReRoll")
                 data.ShopManager:reRoll(data.CoinManager)
                 RemoteEvent:FireClient(player, "Update", "ShopManager", data.ShopManager)
             elseif manageType == "Chunk" then

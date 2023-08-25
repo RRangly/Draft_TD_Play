@@ -7,12 +7,10 @@ local GameFX = {}
 
 function GameFX.executeLoad(data, instance)
     local loadType = instance.Name
-    print("SomethingLoad", loadType)
     if loadType == "PlaySound" then
         local sound = SoundFX:FindFirstChild(instance.Value)
         sound:Play()
     elseif loadType == "PlayAnim" then
-        print("PlayAnim Client")
         local towerIndex = instance.Value
         local towerInfo = data.Towers.Towers[towerIndex]
         local tower = require(Towers:FindFirstChild(towerInfo.Name))

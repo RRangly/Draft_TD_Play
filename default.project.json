@@ -25,6 +25,9 @@
         },
         "WaveStart": {
           "$className": "BindableEvent"
+        },
+        "TraitSelect": {
+          "$className": "BindableEvent"
         }
       },
       "Towers": {
@@ -50,6 +53,9 @@
           "$className": "BindableEvent"
         },
         "DraftSelect": {
+          "$className": "BindableEvent"
+        },
+        "TraitSelect": {
           "$className": "BindableEvent"
         },
         "DraftEnd": {
