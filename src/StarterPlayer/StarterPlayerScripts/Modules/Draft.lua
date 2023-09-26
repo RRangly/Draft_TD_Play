@@ -90,7 +90,7 @@ function Draft.draftBegin(draftCards, playerNum)
     local turn = 1
     local columns = 4
     local rows = math.ceil(#draftCards / columns)
-    local xIndex = 1 / (columns + 1) 
+    local xIndex = 1 / (columns + 1)
     local yIndex = 1 / (rows + 1)
     for row = 1, rows, 1 do
         local y = yIndex * row

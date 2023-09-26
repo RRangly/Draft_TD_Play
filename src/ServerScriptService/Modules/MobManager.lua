@@ -138,9 +138,7 @@ end
 function MobManager.new(pIndex)
     local mobs = {
         PIndex = pIndex;
-        CurrentWave = 0;
         Mobs = {};
-        CurrentMoving = {};
     }
     setmetatable(mobs, MobManager)
     return mobs
