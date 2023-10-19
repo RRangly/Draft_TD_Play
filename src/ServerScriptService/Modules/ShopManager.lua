@@ -61,7 +61,6 @@ function Shop.new(pIndex)
         PIndex = pIndex;
         ShopItems = {};
         ReRoll = 0;
-        Chunks = 0;
     }
     setmetatable(auction, Shop)
     return auction

@@ -23,7 +23,7 @@ function WaveManager:startWave()
     local mobsDistribution
     local totalMob
     if waveType < 3 then
-        totalMob = math.floor(difficultyWeight / math.random(15, 17))
+        totalMob = math.floor(difficultyWeight / math.random(14, 16))
         mobsDistribution = {
             Default = math.ceil(totalMob * 0);
             Tank = math.ceil(totalMob * 1);
@@ -31,7 +31,7 @@ function WaveManager:startWave()
             Special = math.ceil(totalMob * 0);
         }
     elseif waveType < 5 then
-        totalMob = math.floor(difficultyWeight / math.random(14, 16))
+        totalMob = math.floor(difficultyWeight / math.random(15, 17))
         mobsDistribution = {
             Default = math.ceil(totalMob * 0);
             Tank = math.ceil(totalMob * 0);
